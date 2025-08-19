@@ -1,0 +1,48 @@
+name: Deploy Backend to Cloud
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'LinkrMix/**'
+  workflow_dispatch:
+
+jobs:
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: 'maven'
+          cache-dependency-path: 'LinkrMix/pom.xml'
+      
+      - name: Build Backend
+        working-directory: ./LinkrMix
+        run: mvn clean package -DskipTests
+      
+      - name: Upload Backend Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: LinkrMix/admin-service/target/*.jar
+          retention-days: 7
+
+  deploy-to-cloud:
+    needs: build-backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Backend Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-jar
+      
+      - name: Deploy to Cloud
+        run: |
+          echo "后端构建完成，可以部署到云服务器"
+          echo "需要配置具体的云服务器部署步骤"

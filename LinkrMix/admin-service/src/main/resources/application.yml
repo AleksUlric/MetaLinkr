@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: linkr-admin-service
+
+server:
+  port: 8081
+
+

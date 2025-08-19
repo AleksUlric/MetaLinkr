@@ -1,0 +1,11 @@
+{
+	"ios": {
+		"name": "MetaLinkr"
+	},
+	"android": {
+		"name": "MetaLinkr"
+	},
+	"common": {
+		"name": "MetaLinkr"
+	}
+}
