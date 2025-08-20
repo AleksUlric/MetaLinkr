@@ -1,6 +1,12 @@
 spring:
   application:
     name: linkr-admin-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        group: DEFAULT_GROUP
+        fail-fast: false
 
 server:
   port: 8081

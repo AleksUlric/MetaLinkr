@@ -39,12 +39,19 @@
             <artifactId>admin-api</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-        
-        <!-- 添加 Dubbo 依赖 -->
+
+        <!-- 添加 Nacos 依赖 -->
         <dependency>
-            <groupId>org.apache.dubbo</groupId>
-            <artifactId>dubbo-spring-boot-starter</artifactId>
-            <version>3.2.11</version>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+            <version>2021.0.5.0</version>
+        </dependency>
+
+        <!-- 添加 OkHttp 依赖 -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.9.3</version>
         </dependency>
 
         <dependency>

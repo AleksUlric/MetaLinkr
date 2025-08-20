@@ -1,0 +1,1 @@
+import{_ as t,c as s,e as n,f as a,w as r,h as _,g as c,o as d}from"./index-AChigelQ.js";const l={},f={class:"nf"};function i(u,e){const o=c("router-link");return d(),s("div",f,[e[1]||(e[1]=n("h2",null,"页面不存在",-1)),a(o,{to:"/"},{default:r(()=>e[0]||(e[0]=[_("返回首页",-1)])),_:1,__:[0]})])}const m=t(l,[["render",i],["__scopeId","data-v-1e4a4c8a"]]);export{m as default};
