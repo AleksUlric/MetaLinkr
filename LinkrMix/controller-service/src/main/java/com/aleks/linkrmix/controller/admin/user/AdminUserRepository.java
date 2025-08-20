@@ -1,4 +1,4 @@
-package com.aleks.linkrmix.admin.web.user;
+package com.aleks.linkrmix.controller.admin.user;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -49,24 +49,15 @@ public class AdminUserRepository {
 	}
 
 	public long insert(AdminUser user) {
-		jdbcTemplate.update("INSERT INTO admin_user(username, password_hash, display_name) VALUES(?,?,?)",
-				user.getUsername(), user.getPasswordHash(), user.getDisplayName());
-		return jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Long.class);
+		return jdbcTemplate.queryForObject("INSERT INTO admin_user (username, password_hash, display_name) VALUES (?, ?, ?) RETURNING id",
+				Long.class, user.getUsername(), user.getPasswordHash(), user.getDisplayName());
 	}
 
-	public int update(AdminUser user) {
-		return jdbcTemplate.update("UPDATE admin_user SET display_name=? WHERE id=?", user.getDisplayName(), user.getId());
+	public void update(AdminUser user) {
+		jdbcTemplate.update("UPDATE admin_user SET display_name=? WHERE id=?", user.getDisplayName(), user.getId());
 	}
 
-	public int deleteById(long id) {
-		return jdbcTemplate.update("DELETE FROM admin_user WHERE id=?", id);
-	}
-
-	public Optional<AdminUser> findById(Long id) {
-		List<AdminUser> list = jdbcTemplate.query("SELECT id, username, password_hash, display_name FROM admin_user WHERE id=?", ROW_MAPPER, id);
-		return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
+	public void deleteById(long id) {
+		jdbcTemplate.update("DELETE FROM admin_user WHERE id=?", id);
 	}
 }
-
-
-

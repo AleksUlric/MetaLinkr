@@ -1,0 +1,24 @@
+server:
+  port: 20880
+
+spring:
+  application:
+    name: dubbo-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        group: DEFAULT_GROUP
+        fail-fast: false
+
+dubbo:
+  application:
+    name: dubbo-service
+  protocol:
+    name: dubbo
+    port: 20880
+  registry:
+    address: nacos://localhost:8848
+  provider:
+    timeout: 3000
+    retries: 2

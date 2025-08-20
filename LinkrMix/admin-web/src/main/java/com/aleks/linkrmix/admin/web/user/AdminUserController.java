@@ -1,5 +1,14 @@
 package com.aleks.linkrmix.admin.web.user;
 
+import com.aleks.linkrmix.admin.web.common.ApiResponse;
+import com.aleks.linkrmix.admin.web.dto.CreateUserRequest;
+import com.aleks.linkrmix.admin.web.dto.LoginRequest;
+import com.aleks.linkrmix.admin.web.dto.LoginResponse;
+import com.aleks.linkrmix.admin.web.dto.UpdateUserRequest;
+import com.aleks.linkrmix.admin.web.dto.UserDto;
+import com.aleks.linkrmix.admin.web.service.AdminUserService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.validation.annotation.Validated;
@@ -7,106 +16,72 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+@Slf4j
 @Validated
 @RestController
 @RequestMapping(value = "/api/admin", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequiredArgsConstructor
 public class AdminUserController {
 
-	private final AdminUserRepository repository;
+    private final AdminUserService userService;
+    private final AdminUserRepository repository;
 
-	public AdminUserController(AdminUserRepository repository) {
-		this.repository = repository;
-	}
+    @PostConstruct
+    public void init() {
+        repository.initSchema();
+        if (repository.findAll().isEmpty()) {
+            AdminUser admin = new AdminUser();
+            admin.setUsername("admin");
+            admin.setDisplayName("系统管理员");
+            admin.setPasswordHash(BCrypt.hashpw("admin123", BCrypt.gensalt()));
+            repository.insert(admin);
+            log.info("初始化管理员账户完成");
+        }
+    }
 
-	@PostConstruct
-	public void init() {
-		repository.initSchema();
-		if (repository.findAll().isEmpty()) {
-			AdminUser admin = new AdminUser();
-			admin.setUsername("admin");
-			admin.setDisplayName("系统管理员");
-			admin.setPasswordHash(BCrypt.hashpw("admin123", BCrypt.gensalt()));
-			repository.insert(admin);
-		}
-	}
+    @GetMapping("/users")
+    public ApiResponse<List<UserDto>> list() {
+        List<UserDto> users = userService.getAllUsers();
+        return ApiResponse.success("获取用户列表成功", users);
+    }
 
-	@GetMapping("/users")
-	public List<AdminUser> list() {
-		return repository.findAll();
-	}
+    @GetMapping("/users/{id}")
+    public ApiResponse<UserDto> getUserById(@PathVariable("id") Long id) {
+        UserDto user = userService.getUserById(id);
+        return ApiResponse.success("获取用户信息成功", user);
+    }
 
-	@PostMapping("/users")
-	public Map<String, Object> create(@Valid @RequestBody CreateUserRequest req) {
-		AdminUser user = new AdminUser();
-		user.setUsername(req.getUsername());
-		user.setDisplayName(req.getDisplayName());
-		user.setPasswordHash(BCrypt.hashpw(req.getPassword(), BCrypt.gensalt()));
-		long id = repository.insert(user);
-		Map<String, Object> resp = new HashMap<>();
-		resp.put("id", id);
-		return resp;
-	}
+    @PostMapping("/users")
+    public ApiResponse<Long> create(@Valid @RequestBody CreateUserRequest request) {
+        Long userId = userService.createUser(request);
+        return ApiResponse.success("用户创建成功", userId);
+    }
 
-	@PutMapping("/users/{id}")
-	public void update(@PathVariable("id") long id, @RequestBody UpdateUserRequest req) {
-		AdminUser user = new AdminUser();
-		user.setId(id);
-		user.setDisplayName(req.getDisplayName());
-		repository.update(user);
-	}
+    @PutMapping("/users/{id}")
+    public ApiResponse<Void> update(@PathVariable("id") Long id, @Valid @RequestBody UpdateUserRequest request) {
+        userService.updateUser(id, request);
+        return ApiResponse.success("用户更新成功", null);
+    }
 
-	@DeleteMapping("/users/{id}")
-	public void delete(@PathVariable("id") long id) {
-		repository.deleteById(id);
-	}
+    @DeleteMapping("/users/{id}")
+    public ApiResponse<Void> delete(@PathVariable("id") Long id) {
+        userService.deleteUser(id);
+        return ApiResponse.success("用户删除成功", null);
+    }
 
-	@PostMapping("/login")
-	public Map<String, Object> login(@RequestBody LoginRequest req) {
-		return repository.findByUsername(req.getUsername())
-				.filter(u -> BCrypt.checkpw(req.getPassword(), u.getPasswordHash()))
-				.map(u -> {
-					Map<String, Object> m = new HashMap<>();
-					m.put("token", "fake-" + u.getUsername());
-					return m;
-				})
-				.orElseThrow(() -> new RuntimeException("用户名或密码错误"));
-	}
+    @PostMapping("/login")
+    public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        LoginResponse response = userService.login(request);
+        return ApiResponse.success("登录成功", response);
+    }
 
-	public static class CreateUserRequest {
-		@NotBlank
-		private String username;
-		@NotBlank
-		private String password;
-		@NotBlank
-		private String displayName;
-
-		public String getUsername() { return username; }
-		public void setUsername(String username) { this.username = username; }
-		public String getPassword() { return password; }
-		public void setPassword(String password) { this.password = password; }
-		public String getDisplayName() { return displayName; }
-		public void setDisplayName(String displayName) { this.displayName = displayName; }
-	}
-
-	public static class UpdateUserRequest {
-		private String displayName;
-		public String getDisplayName() { return displayName; }
-		public void setDisplayName(String displayName) { this.displayName = displayName; }
-	}
-
-	public static class LoginRequest {
-		private String username;
-		private String password;
-		public String getUsername() { return username; }
-		public void setUsername(String username) { this.username = username; }
-		public String getPassword() { return password; }
-		public void setPassword(String password) { this.password = password; }
-	}
+    @GetMapping("/users/check-username")
+    public ApiResponse<Boolean> checkUsername(@RequestParam("username") String username) {
+        boolean exists = userService.isUsernameExists(username);
+        return ApiResponse.success("检查用户名完成", exists);
+    }
 }
 
 
