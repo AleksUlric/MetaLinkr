@@ -61,11 +61,6 @@ public class AdminUserRepository {
 	public int deleteById(long id) {
 		return jdbcTemplate.update("DELETE FROM admin_user WHERE id=?", id);
 	}
-
-	public Optional<AdminUser> findById(Long id) {
-		List<AdminUser> list = jdbcTemplate.query("SELECT id, username, password_hash, display_name FROM admin_user WHERE id=?", ROW_MAPPER, id);
-		return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
-	}
 }
 
 

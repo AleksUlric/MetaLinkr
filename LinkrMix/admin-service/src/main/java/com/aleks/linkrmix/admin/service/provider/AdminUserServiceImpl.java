@@ -1,13 +1,14 @@
 package com.aleks.linkrmix.admin.service.provider;
 
-import org.springframework.stereotype.Service;
+import com.aleks.linkrmix.admin.api.AdminUserService;
+import org.apache.dubbo.config.annotation.DubboService;
 
-@Service
-public class AdminUserServiceImpl {
+@DubboService(interfaceClass = AdminUserService.class, version = "1.0.0")
+public class AdminUserServiceImpl implements AdminUserService {
 
+	@Override
 	public String getDisplayNameByUsername(String username) {
-		// 模拟返回用户显示名
-		return "用户: " + username + " (来自Nacos注册的服务)";
+		throw new UnsupportedOperationException("Not implemented yet");
 	}
 }
 

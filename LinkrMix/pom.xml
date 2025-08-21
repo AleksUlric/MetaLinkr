@@ -18,8 +18,8 @@
 
     <modules>
         <module>admin-api</module>
-        <module>controller-service</module>
-        <module>dubbo-service</module>
+        <module>admin-service</module>
+        <module>admin-web</module>
     </modules>
 
     <properties>
