@@ -1,17 +1,22 @@
 # Dependencies
 node_modules/
 */node_modules/
+linkr-client/*/node_modules/
 
 # Build outputs
 dist/
 build/
 target/
 */target/
+linkr-server/*/target/
+linkr-client/*/dist/
 
 # Logs
 logs/
 *.log
 */logs/
+linkr-server/*/logs/
+linkr-client/*/logs/
 
 # IDE
 .vscode/
@@ -77,3 +82,7 @@ apollo-server/logs/
 # Temporary files
 *.tmp
 *.temp
+
+# Old project directories (to be removed)
+LinkrMix/
+LinkrWeb/
