@@ -26,10 +26,14 @@ public class ServiceRegistrationListener {
     @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReady(ApplicationReadyEvent event) {
         logger.info("应用启动完成，开始注册服务到Nacos...");
+        logger.info("当前时间: {}", java.time.LocalDateTime.now());
         
         if (serviceRegistry instanceof NacosServiceRegistry) {
             NacosServiceRegistry nacosRegistry = (NacosServiceRegistry) serviceRegistry;
             logger.info("Nacos服务注册器初始化成功");
+            logger.info("服务注册状态: 准备就绪");
+        } else {
+            logger.warn("服务注册器类型不匹配，当前类型: {}", serviceRegistry.getClass().getSimpleName());
         }
     }
 }

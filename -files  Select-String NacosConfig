@@ -25,8 +25,5 @@ public class NacosConfig {
         nacosDiscoveryProperties.getMetadata().put("jvm-version", System.getProperty("java.version"));
         nacosDiscoveryProperties.getMetadata().put("os-name", System.getProperty("os.name"));
         nacosDiscoveryProperties.getMetadata().put("service-type", "admin-module");
-        nacosDiscoveryProperties.getMetadata().put("project-name", "MetaLinkr");
-        nacosDiscoveryProperties.getMetadata().put("version", "1.0.0");
-        nacosDiscoveryProperties.getMetadata().put("author", "Aleks");
     }
 }

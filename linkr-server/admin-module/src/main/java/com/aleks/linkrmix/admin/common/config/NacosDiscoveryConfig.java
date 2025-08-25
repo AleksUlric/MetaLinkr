@@ -39,10 +39,11 @@ public class NacosDiscoveryConfig {
         @Override
         public void run(ApplicationArguments args) throws Exception {
             System.out.println("==========================================");
-            System.out.println("🚀 Admin服务启动完成");
+            System.out.println("🚀 Admin服务启动完成 - MetaLinkr项目");
             System.out.println("==========================================");
             System.out.println("服务名称: admin-module");
             System.out.println("服务端口: 8080");
+            System.out.println("启动时间: " + java.time.LocalDateTime.now());
             System.out.println("健康检查: http://localhost:8080/actuator/health");
             System.out.println("Nacos控制台: http://localhost:8848/nacos");
             System.out.println("==========================================");
