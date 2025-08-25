@@ -21,7 +21,14 @@ linkr-client/*/dist/
 *.iws
 *.iml
 *.ipr
-*.xml
+# IDE XML files (but not source code)
+compiler.xml
+encodings.xml
+inspectionProfiles/
+jarRepositories.xml
+material_theme_project_new.xml
+misc.xml
+workspace.xml
 !pom.xml
 !**/src/main/resources/**/*.xml
 !**/src/test/resources/**/*.xml

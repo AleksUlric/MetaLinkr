@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.aleks.linkrmix.admin.mapper.AdminUserMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="AdminUserResultMap" type="com.aleks.linkrmix.admin.model.entity.AdminUser">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="username" property="username" jdbcType="VARCHAR"/>
+        <result column="display_name" property="displayName" jdbcType="VARCHAR"/>
+        <result column="password_hash" property="passwordHash" jdbcType="VARCHAR"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, username, display_name, password_hash, created_at, updated_at
+    </sql>
+
+    <!-- 查询所有用户 -->
+    <select id="selectAll" resultMap="AdminUserResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM admin_users 
+        ORDER BY id
+    </select>
+
+    <!-- 根据ID查询用户 -->
+    <select id="selectById" parameterType="java.lang.Long" resultMap="AdminUserResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM admin_users 
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根据用户名查询用户 -->
+    <select id="selectByUsername" parameterType="java.lang.String" resultMap="AdminUserResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM admin_users 
+        WHERE username = #{username}
+    </select>
+
+    <!-- 插入用户 -->
+    <insert id="insert" parameterType="com.aleks.linkrmix.admin.model.entity.AdminUser" 
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO admin_users (username, display_name, password_hash)
+        VALUES (#{username}, #{displayName}, #{passwordHash})
+    </insert>
+
+    <!-- 更新用户 -->
+    <update id="update" parameterType="com.aleks.linkrmix.admin.model.entity.AdminUser">
+        UPDATE admin_users 
+        SET display_name = #{displayName},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除用户 -->
+    <delete id="deleteById" parameterType="java.lang.Long">
+        DELETE FROM admin_users WHERE id = #{id}
+    </delete>
+
+    <!-- 检查用户名是否存在 -->
+    <select id="countByUsername" parameterType="java.lang.String" resultType="int">
+        SELECT COUNT(*) FROM admin_users WHERE username = #{username}
+    </select>
+
+</mapper>
