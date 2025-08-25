@@ -11,6 +11,38 @@ target/
 linkr-server/*/target/
 linkr-client/*/dist/
 
+# Maven specific
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# IDE - IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+*.xml
+!pom.xml
+!**/src/main/resources/**/*.xml
+!**/src/test/resources/**/*.xml
+
+# IDE - Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# IDE - NetBeans
+/nbproject/private/
+/nbbuild/
+/nbdist/
+/.nb-gradle/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
 # Logs
 logs/
 *.log
@@ -59,9 +91,12 @@ jspm_packages/
 .env
 
 # Nacos data and runtime files
-nacos-server/nacos/data/
-nacos-server/nacos/target/
-nacos-server/nacos/bin/
+nacos-server/data/
+nacos-server/target/
+nacos-server/bin/
+nacos-server/logs/
+nacos-server/derby.log
+nacos-server/work/
 
 # Apollo logs
 apollo-server/logs/

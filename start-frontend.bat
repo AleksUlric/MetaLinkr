@@ -1,0 +1,13 @@
+@echo off
+chcp 65001 >nul
+echo 正在启动前端服务...
+cd /d "%~dp0linkr-client\linkr-dashboard"
+echo 当前目录: %CD%
+echo 正在安装依赖...
+call npm install
+echo 正在启动开发服务器...
+start "前端服务" cmd /k "npm run dev"
+echo 前端服务启动中，请稍候...
+timeout /t 5 /nobreak >nul
+echo 前端服务已启动，访问地址: http://localhost:5173
+pause

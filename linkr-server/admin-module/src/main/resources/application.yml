@@ -4,13 +4,86 @@ server:
 spring:
   application:
     name: admin-module
+  # 添加配置导入，解决Spring Cloud配置问题
+  # config:
+  #   import: optional:nacos:
+  # 禁用Spring Security自动配置
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/linkr_admin?useSSL=false&useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true
     username: root
     password: Xing@1225
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      continue-on-error: true
 
+# Spring Security开关配置
+security:
+  enabled: false
+
+# Nacos配置
+  cloud:
+    nacos:
+      config:
+        import-check:
+          enabled: false
+
+# 健康检查和监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+    info:
+      enabled: true
+  info:
+    env:
+      enabled: true
+    git:
+      mode: full
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# 日志配置
 logging:
   level:
     com.aleks.linkrmix.admin: DEBUG
     org.springframework.security: DEBUG
+    # Nacos日志配置
+    com.alibaba.cloud.nacos: INFO
+    com.alibaba.nacos: INFO
+
+# MyBatis-Plus配置
+mybatis-plus:
+  mapper-locations: classpath:com/aleks/linkrmix/admin/mapper/*.xml
+  type-aliases-package: com.aleks.linkrmix.admin.model.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+    banner: false
+
+# 分页插件配置
+pagehelper:
+  helper-dialect: mysql
+  reasonable: true
+  support-methods-arguments: true
+  params: count=countSql
