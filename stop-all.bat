@@ -18,7 +18,8 @@ taskkill /f /im mvn.cmd 2>nul
 taskkill /f /im mvn.exe 2>nul
 
 echo 关闭相关命令行窗口...
-taskkill /f /fi "WINDOWTITLE eq 前端服务*" 2>nul
+taskkill /f /fi "WINDOWTITLE eq Dashboard前端服务*" 2>nul
+taskkill /f /fi "WINDOWTITLE eq Log前端服务*" 2>nul
 taskkill /f /fi "WINDOWTITLE eq 后端服务*" 2>nul
 taskkill /f /fi "WINDOWTITLE eq Nacos服务*" 2>nul
 
@@ -27,6 +28,8 @@ echo 检查8080端口...
 netstat -ano | findstr :8080
 echo 检查5173端口...
 netstat -ano | findstr :5173
+echo 检查5174端口...
+netstat -ano | findstr :5174
 echo 检查8848端口...
 netstat -ano | findstr :8848
 

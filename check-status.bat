@@ -32,15 +32,27 @@ if %errorlevel% equ 0 (
 )
 
 echo.
-echo 🔍 检查前端服务 (端口5173)...
+echo 🔍 检查Dashboard前端服务 (端口5173)...
 netstat -ano | findstr :5173 >nul
 if %errorlevel% equ 0 (
-    echo ✅ 前端服务正在运行
+    echo ✅ Dashboard前端服务正在运行
     for /f "tokens=5" %%a in ('netstat -ano ^| findstr :5173') do (
         echo    进程ID: %%a
     )
 ) else (
-    echo ❌ 前端服务未运行
+    echo ❌ Dashboard前端服务未运行
+)
+
+echo.
+echo 🔍 检查Log前端服务 (端口5174)...
+netstat -ano | findstr :5174 >nul
+if %errorlevel% equ 0 (
+    echo ✅ Log前端服务正在运行
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr :5174') do (
+        echo    进程ID: %%a
+    )
+) else (
+    echo ❌ Log前端服务未运行
 )
 
 echo.
@@ -70,7 +82,8 @@ echo ========================================
 echo 🌐 Nacos控制台: http://localhost:8848/nacos
 echo 🔧 Admin后端API: http://localhost:8080
 echo 📊 健康检查: http://localhost:8080/actuator/health
-echo 🖥️  前端页面: http://localhost:5173
+echo 🖥️  Dashboard前端: http://localhost:5173
+echo 📝 Log前端: http://localhost:5174
 echo ========================================
 
 echo.

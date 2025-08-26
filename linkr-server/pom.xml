@@ -18,6 +18,7 @@
 
     <modules>
         <module>admin-module</module>
+        <module>log-module</module>
     </modules>
 
     <properties>
