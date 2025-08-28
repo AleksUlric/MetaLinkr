@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Nacos服务",
+    "logPath": "/logs/nacos/",
+    "type": "java",
+    "interval": 30,
+    "description": "Nacos注册中心和配置中心服务"
+  },
+  {
+    "name": "后端API服务",
+    "logPath": "/logs/backend/",
+    "type": "java",
+    "interval": 15,
+    "description": "Spring Boot后端API服务"
+  },
+  {
+    "name": "前端服务",
+    "logPath": "/logs/frontend/",
+    "type": "nodejs",
+    "interval": 20,
+    "description": "Vue.js前端应用服务"
+  },
+  {
+    "name": "数据库服务",
+    "logPath": "/logs/database/",
+    "type": "database",
+    "interval": 60,
+    "description": "MySQL数据库服务"
+  },
+  {
+    "name": "Redis缓存",
+    "logPath": "/logs/redis/",
+    "type": "other",
+    "interval": 45,
+    "description": "Redis缓存服务"
+  }
+]

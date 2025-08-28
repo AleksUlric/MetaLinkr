@@ -1,6 +1,6 @@
 package com.aleks.linkrmix.admin.controller;
 
-import com.aleks.linkrmix.admin.common.response.ApiResponse;
+import com.aleks.linkrmix.common.response.ApiResponse;
 import com.aleks.linkrmix.admin.model.dto.LoginDto;
 import com.aleks.linkrmix.admin.service.AuthService;
 import org.springframework.http.MediaType;

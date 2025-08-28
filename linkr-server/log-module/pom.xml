@@ -45,6 +45,13 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
         
+        <!-- Common Module -->
+        <dependency>
+            <groupId>com.aleks</groupId>
+            <artifactId>common-module</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
         <!-- MyBatis Plus Starter -->
         <dependency>
             <groupId>com.baomidou</groupId>
@@ -52,12 +59,7 @@
             <version>${mybatis-plus.version}</version>
         </dependency>
         
-        <!-- PageHelper Starter -->
-        <dependency>
-            <groupId>com.github.pagehelper</groupId>
-            <artifactId>pagehelper-spring-boot-starter</artifactId>
-            <version>1.4.6</version>
-        </dependency>
+
         
         <!-- MySQL Connector -->
         <dependency>

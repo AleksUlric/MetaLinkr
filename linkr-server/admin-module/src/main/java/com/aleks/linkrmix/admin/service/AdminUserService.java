@@ -3,11 +3,10 @@ package com.aleks.linkrmix.admin.service;
 import com.aleks.linkrmix.admin.model.dto.CreateUserDto;
 import com.aleks.linkrmix.admin.model.dto.UpdateUserDto;
 import com.aleks.linkrmix.admin.model.entity.AdminUser;
-import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
 
-public interface AdminUserService extends IService<AdminUser> {
+public interface AdminUserService {
     
     List<AdminUser> findAllUsers();
     

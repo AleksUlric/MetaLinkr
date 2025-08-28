@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS `service_info` (
 CREATE TABLE IF NOT EXISTS `alert_rule` (
   `id` varchar(64) NOT NULL COMMENT '主键ID',
   `name` varchar(100) NOT NULL COMMENT '规则名称',
-  `condition` varchar(500) NOT NULL COMMENT '告警条件',
+  `rule_condition` varchar(500) NOT NULL COMMENT '告警条件',
   `level` varchar(20) NOT NULL COMMENT '告警级别',
   `notification_methods` text DEFAULT NULL COMMENT '通知方式（JSON格式）',
   `enabled` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否启用',
@@ -61,9 +61,10 @@ INSERT INTO `service_info` (`id`, `name`, `status`, `log_path`, `last_update`, `
 ('1', '后端服务', 'running', '/logs/backend/', NOW(), 456, 12),
 ('2', '前端服务', 'running', '/logs/frontend/', NOW(), 234, 5),
 ('3', '数据库', 'running', '/logs/database/', NOW(), 789, 23),
-('4', 'Nacos服务', 'running', '/logs/nacos/', NOW(), 123, 2);
+('4', 'Nacos服务', 'running', '/logs/nacos/', NOW(), 123, 2),
+('5', 'log-module', 'running', 'logs/log-module.log', NOW(), 0, 0);
 
-INSERT INTO `alert_rule` (`id`, `name`, `condition`, `level`, `notification_methods`, `enabled`) VALUES
+INSERT INTO `alert_rule` (`id`, `name`, `rule_condition`, `level`, `notification_methods`, `enabled`) VALUES
 ('1', '错误率过高', '错误日志>10条/分钟', 'ERROR', '["邮件", "短信"]', 1),
 ('2', '服务异常', '服务状态=停止', 'FATAL', '["钉钉", "邮件"]', 1),
 ('3', '性能告警', '响应时间>5秒', 'WARN', '["邮件"]', 1);

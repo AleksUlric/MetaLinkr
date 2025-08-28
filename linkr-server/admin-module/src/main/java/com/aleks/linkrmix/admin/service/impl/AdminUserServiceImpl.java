@@ -1,13 +1,13 @@
 package com.aleks.linkrmix.admin.service.impl;
 
-import com.aleks.linkrmix.admin.manager.impl.AdminUserManagerImpl;
+import com.aleks.linkrmix.admin.common.exception.UserNotFoundException;
+import com.aleks.linkrmix.admin.common.exception.UserAlreadyExistsException;
+import com.aleks.linkrmix.admin.manager.AdminUserManager;
 import com.aleks.linkrmix.admin.model.dto.CreateUserDto;
 import com.aleks.linkrmix.admin.model.dto.UpdateUserDto;
 import com.aleks.linkrmix.admin.model.entity.AdminUser;
 import com.aleks.linkrmix.admin.service.AdminUserService;
 import com.aleks.linkrmix.admin.common.util.PasswordUtil;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.aleks.linkrmix.admin.mapper.AdminUserMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,10 +16,10 @@ import java.util.List;
 
 @Service
 @Transactional
-public class AdminUserServiceImpl extends ServiceImpl<AdminUserMapper, AdminUser> implements AdminUserService {
+public class AdminUserServiceImpl implements AdminUserService {
     
     @Resource
-    private AdminUserManagerImpl adminUserManager;
+    private AdminUserManager adminUserManager;
     
     @Resource
     private PasswordUtil passwordUtil;
@@ -32,14 +32,14 @@ public class AdminUserServiceImpl extends ServiceImpl<AdminUserMapper, AdminUser
     @Override
     public AdminUser findUserById(Long id) {
         return adminUserManager.findById(id)
-                .orElseThrow(() -> new RuntimeException("用户不存在"));
+                .orElseThrow(() -> new UserNotFoundException(id));
     }
     
     @Override
     public Long createUser(CreateUserDto createUserDto) {
         // 检查用户名是否已存在
         if (adminUserManager.existsByUsername(createUserDto.getUsername())) {
-            throw new RuntimeException("用户名已存在");
+            throw new UserAlreadyExistsException(createUserDto.getUsername());
         }
         
         AdminUser user = new AdminUser();
@@ -72,6 +72,6 @@ public class AdminUserServiceImpl extends ServiceImpl<AdminUserMapper, AdminUser
     @Override
     public AdminUser findByUsername(String username) {
         return adminUserManager.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("用户不存在"));
+                .orElseThrow(() -> new UserNotFoundException(username));
     }
 }

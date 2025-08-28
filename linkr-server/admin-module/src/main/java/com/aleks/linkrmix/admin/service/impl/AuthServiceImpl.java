@@ -1,6 +1,7 @@
 package com.aleks.linkrmix.admin.service.impl;
 
-import com.aleks.linkrmix.admin.manager.impl.AdminUserManagerImpl;
+import com.aleks.linkrmix.admin.common.exception.AuthenticationException;
+import com.aleks.linkrmix.admin.manager.AdminUserManager;
 import com.aleks.linkrmix.admin.model.dto.LoginDto;
 import com.aleks.linkrmix.admin.service.AuthService;
 import com.aleks.linkrmix.admin.common.util.PasswordUtil;
@@ -14,7 +15,7 @@ import java.util.Map;
 public class AuthServiceImpl implements AuthService {
     
     @Resource
-    private AdminUserManagerImpl adminUserManager;
+    private AdminUserManager adminUserManager;
     
     @Resource
     private PasswordUtil passwordUtil;
@@ -29,6 +30,6 @@ public class AuthServiceImpl implements AuthService {
                     result.put("user", user);
                     return result;
                 })
-                .orElseThrow(() -> new RuntimeException("用户名或密码错误"));
+                .orElseThrow(() -> new AuthenticationException());
     }
 }

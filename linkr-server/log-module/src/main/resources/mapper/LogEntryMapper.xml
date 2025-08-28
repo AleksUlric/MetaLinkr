@@ -27,7 +27,7 @@
     </select>
 
     <!-- 获取最新告警 -->
-    <select id="getRecentAlerts" resultType="com.aleks.linkrmix.log.entity.LogEntry">
+    <select id="getRecentAlerts" resultType="com.aleks.linkrmix.log.model.entity.LogEntry">
         SELECT * FROM log_entry 
         WHERE deleted = 0 AND level IN ('ERROR', 'FATAL')
         ORDER BY timestamp DESC 
