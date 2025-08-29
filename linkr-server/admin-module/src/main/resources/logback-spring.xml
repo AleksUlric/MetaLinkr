@@ -4,7 +4,7 @@
     <property name="LOG_HOME" value="logs"/>
     
     <!-- 控制台输出 -->
-    <appender name="CONSOLE" class="com.aleks.linkrmix.log.common.config.ColoredConsoleAppender">
+    <appender name="CONSOLE" class="com.aleks.linkrmix.admin.common.config.ColoredConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{40} : %msg%n</pattern>
             <charset>UTF-8</charset>
@@ -13,9 +13,9 @@
     
     <!-- 文件输出 -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_HOME}/log-module.log</file>
+        <file>${LOG_HOME}/admin-module.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_HOME}/log-module.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <fileNamePattern>${LOG_HOME}/admin-module.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                 <maxFileSize>100MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
@@ -29,14 +29,14 @@
     
     <!-- 错误日志单独输出 -->
     <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_HOME}/log-module-error.log</file>
+        <file>${LOG_HOME}/admin-module-error.log</file>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>ERROR</level>
             <onMatch>ACCEPT</onMatch>
             <onMismatch>DENY</onMismatch>
         </filter>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_HOME}/log-module-error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <fileNamePattern>${LOG_HOME}/admin-module-error.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                 <maxFileSize>100MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
@@ -49,10 +49,10 @@
     </appender>
     
     <!-- 数据库日志Appender -->
-    <appender name="DATABASE" class="com.aleks.linkrmix.log.common.config.DatabaseAppender"/>
+    <appender name="DATABASE" class="com.aleks.linkrmix.admin.common.config.DatabaseAppender"/>
     
     <!-- 应用日志级别 -->
-    <logger name="com.aleks.linkrmix.log" level="DEBUG" additivity="false">
+    <logger name="com.aleks.linkrmix.admin" level="DEBUG" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
         <appender-ref ref="ERROR_FILE"/>
@@ -112,6 +112,12 @@
          <appender-ref ref="CONSOLE"/>
          <appender-ref ref="FILE"/>
      </logger>
+    
+    <!-- Nacos日志 -->
+    <logger name="com.alibaba.cloud.nacos" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </logger>
     
     <!-- 根日志级别 -->
     <root level="INFO">

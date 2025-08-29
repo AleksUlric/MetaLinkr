@@ -8,6 +8,8 @@ import com.aleks.linkrmix.admin.model.dto.UpdateUserDto;
 import com.aleks.linkrmix.admin.model.entity.AdminUser;
 import com.aleks.linkrmix.admin.service.AdminUserService;
 import com.aleks.linkrmix.admin.common.util.PasswordUtil;
+import com.aleks.linkrmix.common.exception.ExceptionUtils;
+import com.aleks.linkrmix.common.response.ErrorCode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,10 +39,14 @@ public class AdminUserServiceImpl implements AdminUserService {
     
     @Override
     public Long createUser(CreateUserDto createUserDto) {
+        // 使用ExceptionUtils进行参数校验
+        ExceptionUtils.throwIfEmpty(createUserDto.getUsername(), ErrorCode.PARAM_ERROR, "用户名不能为空");
+        ExceptionUtils.throwIfEmpty(createUserDto.getPassword(), ErrorCode.PARAM_ERROR, "密码不能为空");
+        ExceptionUtils.throwIfEmpty(createUserDto.getDisplayName(), ErrorCode.PARAM_ERROR, "显示名称不能为空");
+        
         // 检查用户名是否已存在
-        if (adminUserManager.existsByUsername(createUserDto.getUsername())) {
-            throw new UserAlreadyExistsException(createUserDto.getUsername());
-        }
+        ExceptionUtils.throwIfTrue(adminUserManager.existsByUsername(createUserDto.getUsername()), 
+                ErrorCode.BUSINESS_LOGIC_ERROR, "用户名已存在: " + createUserDto.getUsername());
         
         AdminUser user = new AdminUser();
         user.setUsername(createUserDto.getUsername());
@@ -52,6 +58,10 @@ public class AdminUserServiceImpl implements AdminUserService {
     
     @Override
     public void updateUser(Long id, UpdateUserDto updateUserDto) {
+        // 使用ExceptionUtils进行参数校验
+        ExceptionUtils.throwIfNull(id, ErrorCode.PARAM_ERROR, "用户ID不能为空");
+        ExceptionUtils.throwIfEmpty(updateUserDto.getDisplayName(), ErrorCode.PARAM_ERROR, "显示名称不能为空");
+        
         // 检查用户是否存在
         findUserById(id);
         
@@ -64,6 +74,9 @@ public class AdminUserServiceImpl implements AdminUserService {
     
     @Override
     public void deleteUser(Long id) {
+        // 使用ExceptionUtils进行参数校验
+        ExceptionUtils.throwIfNull(id, ErrorCode.PARAM_ERROR, "用户ID不能为空");
+        
         // 检查用户是否存在
         findUserById(id);
         adminUserManager.deleteById(id);
@@ -71,6 +84,8 @@ public class AdminUserServiceImpl implements AdminUserService {
     
     @Override
     public AdminUser findByUsername(String username) {
+        ExceptionUtils.throwIfEmpty(username, ErrorCode.PARAM_ERROR, "用户名不能为空");
+        
         return adminUserManager.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException(username));
     }

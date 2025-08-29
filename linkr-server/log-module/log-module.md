@@ -56,35 +56,35 @@ mvn spring-boot:run
 
 #### 生成INFO日志
 ```bash
-curl -X POST http://localhost:8082/api/test-logs/info \
+curl -X POST http://localhost:8081/api/test-logs/info \
   -H "Content-Type: application/json" \
   -d '{"message": "测试INFO日志"}'
 ```
 
 #### 生成ERROR日志
 ```bash
-curl -X POST http://localhost:8082/api/test-logs/error \
+curl -X POST http://localhost:8081/api/test-logs/error \
   -H "Content-Type: application/json" \
   -d '{"message": "测试ERROR日志"}'
 ```
 
 #### 生成带异常的ERROR日志
 ```bash
-curl -X POST http://localhost:8082/api/test-logs/error-with-exception \
+curl -X POST http://localhost:8081/api/test-logs/error-with-exception \
   -H "Content-Type: application/json" \
   -d '{"message": "测试异常日志"}'
 ```
 
 #### 批量生成日志
 ```bash
-curl -X POST http://localhost:8082/api/test-logs/multiple \
+curl -X POST http://localhost:8081/api/test-logs/multiple \
   -H "Content-Type: application/json" \
   -d '{"count": 10}'
 ```
 
 #### 生成业务日志
 ```bash
-curl -X POST http://localhost:8082/api/test-logs/business \
+curl -X POST http://localhost:8081/api/test-logs/business \
   -H "Content-Type: application/json" \
   -d '{"operation": "查询服务列表", "userId": "admin"}'
 ```
@@ -132,7 +132,7 @@ ORDER BY timestamp DESC LIMIT 20;
 | module | 模块名称 | controller, service, mapper等 |
 | message | 日志消息 | 具体的日志内容 |
 | stackTrace | 堆栈跟踪 | 异常时的堆栈信息 |
-| thread | 线程名称 | http-nio-8082-exec-1 |
+| thread | 线程名称 | http-nio-8081-exec-1 |
 | className | 类名 | com.aleks.linkrmix.log.controller.ServiceController |
 | lineNumber | 行号 | 45 |
 

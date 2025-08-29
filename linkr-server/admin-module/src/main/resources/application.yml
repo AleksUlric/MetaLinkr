@@ -119,6 +119,8 @@ logging:
     com.alibaba.cloud.nacos: INFO
     com.alibaba.nacos: INFO
     org.springframework.cloud: INFO
+    com.baomidou.mybatisplus: WARN
+    org.apache.ibatis: WARN
 
 # MyBatis-Plus配置
 mybatis-plus:
@@ -126,7 +128,7 @@ mybatis-plus:
   type-aliases-package: com.aleks.linkrmix.admin.model.entity
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
   global-config:
     db-config:
       id-type: auto

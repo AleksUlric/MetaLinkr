@@ -1,6 +1,7 @@
 package com.aleks.linkrmix.admin.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +24,12 @@ public class HealthController {
 
     @Autowired
     private DiscoveryClient discoveryClient;
+    
+    @Value("${spring.application.name}")
+    private String serviceName;
+    
+    @Value("${server.port}")
+    private String serverPort;
 
     /**
      * 服务状态检查
@@ -30,7 +37,7 @@ public class HealthController {
     @GetMapping("/status")
     public Map<String, Object> getStatus() {
         Map<String, Object> result = new HashMap<>();
-        result.put("service", "admin-module");
+        result.put("service", serviceName);
         result.put("status", "UP");
         result.put("timestamp", System.currentTimeMillis());
         return result;
@@ -42,17 +49,17 @@ public class HealthController {
     @GetMapping("/info")
     public Map<String, Object> getInfo() {
         Map<String, Object> result = new HashMap<>();
-        result.put("service", "admin-module");
+        result.put("service", serviceName);
         result.put("version", "1.0.0");
         result.put("description", "Admin management service");
-        result.put("port", 8080);
+        result.put("port", Integer.parseInt(serverPort));
         
         // 获取已注册的服务列表
         List<String> services = discoveryClient.getServices();
         result.put("registeredServices", services);
         
         // 获取当前服务的实例信息
-        List<ServiceInstance> instances = discoveryClient.getInstances("admin-module");
+        List<ServiceInstance> instances = discoveryClient.getInstances(serviceName);
         result.put("instances", instances);
         
         return result;

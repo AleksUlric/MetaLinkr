@@ -1,5 +1,6 @@
 @echo off
 chcp 65001 >nul
+setlocal enabledelayedexpansion
 echo ========================================
 echo MetaLinkr - MySQL 服务管理脚本
 echo ========================================

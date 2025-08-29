@@ -221,7 +221,7 @@ netstat -ano | findstr :8848  # 检查Nacos服务
 
 ### Log-Module (日志模块)
 - **功能**: 日志收集、存储、查询、分析
-- **端口**: 8082
+- **端口**: 8081
 - **技术栈**: Spring Boot + MyBatis Plus + Logback
 - **详细文档**: [日志模块文档](./linkr-server/log-module/log-module.md)
 
@@ -298,7 +298,7 @@ start-log-module.bat
 start-log-front.bat
 ```
 
-#### 5. check-status.bat - 服务状态检查
+#### 8. check-status.bat - 服务状态检查
 **功能**: 检查所有服务的运行状态和端口占用情况
 **用法**: 
 ```bash
@@ -313,6 +313,158 @@ check-status.bat
 5. **停止服务**: 使用 `start-all.bat stop` 或 `stop-all.bat`
 
 ## 📝 开发规范
+
+### 日志配置规范
+
+#### 概述
+MetaLinkr 项目采用统一的日志配置规范，确保所有后端服务的日志格式一致性和可读性。
+
+#### 日志格式
+
+**控制台输出格式：**
+```
+时间戳 [线程名] 日志级别 类名 : 消息内容
+```
+
+**示例：**
+```
+10:30:15.123 [main]      ℹ️ INFO     [main        ] controller.AuthController     : ✅ admin-module服务注册成功
+10:30:15.456 [main]      🔍 DEBUG    [main        ] service.AuthServiceImpl       : 用户登录验证开始
+10:30:15.789 [main]      ❌ ERROR    [main        ] config.GlobalExceptionHandler : 数据库连接失败
+```
+
+**文件输出格式：**
+```
+2024-01-15 10:30:15.123 [main] INFO  com.aleks.linkrmix.admin.controller.AuthController - 用户登录成功
+```
+
+#### 日志级别
+- **ERROR**: ❌ 红色 - 系统错误，需要立即关注
+- **WARN**: ⚠️ 黄色 - 警告信息，可能的问题
+- **INFO**: ℹ️ 绿色 - 重要业务信息
+- **DEBUG**: 🔍 蓝色 - 调试信息，开发时使用
+- **TRACE**: 🔎 紫色 - 最详细的调试信息
+
+#### 服务日志配置
+
+**1. Admin Module (admin-module)**
+- **端口**: 8080
+- **日志文件**: `logs/admin-module.log`
+- **错误日志**: `logs/admin-module-error.log`
+- **日志级别**: DEBUG (应用), INFO (框架), WARN (MyBatis/HikariCP)
+
+**2. Log Module (log-module)**
+- **端口**: 8081
+- **日志文件**: `logs/log-module.log`
+- **错误日志**: `logs/log-module-error.log`
+- **日志级别**: DEBUG (应用), INFO (框架), WARN (MyBatis/HikariCP)
+- **特殊功能**: 数据库日志存储
+
+**3. Nacos Server**
+- **端口**: 8848
+- **日志文件**: `logs/nacos.log`
+- **错误日志**: `logs/nacos-error.log`
+- **日志级别**: INFO (根级别), WARN (核心组件)
+- **配置**: 使用官方默认日志配置
+
+#### 日志轮转策略
+- **文件大小限制**: 100MB
+- **保留天数**: 30天
+- **文件命名**: `服务名.日期.序号.log`
+
+#### 特殊功能
+
+**1. 彩色控制台输出**
+每个服务都配置了自定义的 `ColoredConsoleAppender`，提供：
+- 彩色日志级别显示和图标标识
+- 优化的时间戳格式
+- 简化的类名显示（只显示最后两部分）
+- 对齐的线程名和类名
+- 简洁的异常堆栈显示（最多3行）
+
+**2. 数据库框架日志优化**
+为了减少冗余的SQL调试信息，对以下框架的日志级别进行了优化：
+- **MyBatis**: 设置为WARN级别，减少SQL执行日志
+- **MyBatis-Plus**: 设置为WARN级别，减少初始化日志
+- **HikariCP**: 设置为WARN级别，减少连接池管理日志
+
+**3. 集中化日志收集系统**
+项目实现了完整的日志收集功能，支持所有服务的日志统一管理：
+
+**Admin Module 日志收集**
+- 配置 `DatabaseAppender`，自动收集应用日志
+- 支持实时日志监控和存储
+- 可通过Log前端界面查看收集的日志
+
+**Nacos Server 日志收集**
+- 使用官方默认日志配置，保持稳定性
+- 支持本地文件日志存储
+- 可通过Log前端界面查看日志
+
+**Log Module 日志收集**
+- 配置 `DatabaseAppender`，将日志自动存储到数据库
+- 支持日志查询和分析
+- 支持日志搜索和过滤
+- 支持日志统计和监控
+
+
+
+#### 启动日志示例
+
+**Admin Module 启动日志：**
+```
+==========================================
+🚀 Admin服务启动完成 - MetaLinkr项目
+==========================================
+服务名称: admin-module
+服务端口: 8080
+启动时间: 2024-01-15T10:30:00
+健康检查: http://localhost:8080/actuator/health
+Nacos控制台: http://localhost:8848/nacos
+==========================================
+✅ admin-module服务注册成功
+   实例地址: 192.168.1.100:8080
+==========================================
+```
+
+**Log Module 启动日志：**
+```
+==========================================
+🚀 Log服务启动完成 - MetaLinkr项目
+==========================================
+服务名称: log-module
+服务端口: 8081
+启动时间: 2024-01-15T10:30:00
+健康检查: http://localhost:8081/actuator/health
+Nacos控制台: http://localhost:8848/nacos
+==========================================
+✅ log-module服务注册成功
+   实例地址: 192.168.1.100:8081
+==========================================
+```
+
+#### 配置位置
+- **Admin Module**: `linkr-server/admin-module/src/main/resources/logback-spring.xml`
+- **Log Module**: `linkr-server/log-module/src/main/resources/logback-spring.xml`
+- **Nacos Server**: `nacos-server/conf/nacos-logback.xml`
+
+#### 最佳实践
+1. **日志内容规范**
+   - 使用占位符而不是字符串拼接
+   - 避免记录敏感信息
+   - 提供有意义的日志消息
+
+2. **日志级别使用**
+   - ERROR: 系统错误和异常
+   - WARN: 潜在问题和警告
+   - INFO: 重要业务操作
+   - DEBUG: 调试信息
+   - TRACE: 详细调试信息
+
+3. **性能考虑**
+   - 避免在日志中执行复杂操作
+   - 合理设置日志级别
+   - 使用异步日志处理
 
 ### 项目结构规范
 
@@ -463,7 +615,22 @@ public class LogEntryManager {
 
 ## 🔄 版本历史
 
-### v1.3.0 (当前版本)
+### v1.4.1 (当前版本)
+- ✅ 为admin-module添加日志收集功能
+- ✅ admin-module配置DatabaseAppender，支持日志自动收集
+- ✅ nacos-server恢复官方默认日志配置，保持稳定性
+- ✅ 统一所有服务的日志收集标准，实现集中化日志管理
+
+### v1.4.0
+- ✅ 统一所有服务的日志配置格式，包括log-module、admin-module和nacos-server
+- ✅ 优化日志输出，减少重复的启动信息和MyBatis调试日志
+- ✅ 简化服务启动流程，删除重复的配置类和监听器
+- ✅ 统一数据库连接检查逻辑，连接失败时直接终止应用启动
+- ✅ 整合日志配置规范到根目录README.md，删除单独的LOGGING_CONFIG.md
+- ✅ 优化Nacos服务日志配置，简化日志文件结构，减少冗余输出
+- ✅ 统一所有服务的日志格式和级别设置，提高日志可读性
+
+### v1.3.0
 - ✅ 新增统一错误处理系统，包含错误码定义、异常处理、响应格式
 - ✅ 创建Common-Module公共模块，提供全局异常处理器和工具类
 - ✅ 完善错误码分类，按功能模块划分（通用、认证、日志、服务、数据库等）

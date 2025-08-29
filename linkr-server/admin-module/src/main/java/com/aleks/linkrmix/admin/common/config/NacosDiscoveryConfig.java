@@ -40,30 +40,55 @@ public class NacosDiscoveryConfig {
 
         @Override
         public void run(ApplicationArguments args) throws Exception {
-                    log.info("==========================================");
-        log.info("🚀 Admin服务启动完成 - MetaLinkr项目");
-        log.info("==========================================");
-        log.info("服务名称: admin-module");
-        log.info("服务端口: 8080");
-        log.info("启动时间: {}", java.time.LocalDateTime.now());
-        log.info("健康检查: http://localhost:8080/actuator/health");
-        log.info("Nacos控制台: http://localhost:8848/nacos");
-        log.info("==========================================");
+            log.info("==========================================");
+            log.info("🚀 Admin服务启动完成 - MetaLinkr项目");
+            log.info("==========================================");
+            log.info("服务名称: admin-module");
+            log.info("服务端口: 8080");
+            log.info("启动时间: {}", java.time.LocalDateTime.now());
+            log.info("健康检查: http://localhost:8080/actuator/health");
+            log.info("Nacos控制台: http://localhost:8848/nacos");
+            log.info("==========================================");
             
-            // 检查admin-module服务是否注册成功
-            List<ServiceInstance> instances = discoveryClient.getInstances("admin-module");
-            if (!instances.isEmpty()) {
-                log.info("✅ admin-module服务注册成功");
-                for (ServiceInstance instance : instances) {
-                    log.info("   实例地址: {}:{}", instance.getHost(), instance.getPort());
-                    log.info("   实例状态: {}", instance.getMetadata());
+            // 等待服务注册完成，最多重试5次，每次间隔2秒
+            boolean registered = false;
+            int maxRetries = 5;
+            int retryCount = 0;
+            
+            while (!registered && retryCount < maxRetries) {
+                try {
+                    // 等待2秒让服务完全注册
+                    Thread.sleep(2000);
+                    
+                    // 检查admin-module服务是否注册成功
+                    List<ServiceInstance> instances = discoveryClient.getInstances("admin-module");
+                    if (!instances.isEmpty()) {
+                        log.info("✅ admin-module服务注册成功");
+                        for (ServiceInstance instance : instances) {
+                            log.info("   实例地址: {}:{}", instance.getHost(), instance.getPort());
+                            log.info("   实例ID: {}", instance.getInstanceId());
+                            log.info("   服务ID: {}", instance.getServiceId());
+                            log.info("   元数据: {}", instance.getMetadata());
+                        }
+                        registered = true;
+                    } else {
+                        retryCount++;
+                        if (retryCount < maxRetries) {
+                            log.warn("⚠️ 第{}次检查：admin-module服务尚未注册成功，等待重试...", retryCount);
+                        } else {
+                            log.error("❌ admin-module服务注册失败，已重试{}次", maxRetries);
+                        }
+                    }
+                } catch (Exception e) {
+                    retryCount++;
+                    log.error("检查服务注册状态时发生异常: {}", e.getMessage());
+                    if (retryCount >= maxRetries) {
+                        log.error("❌ 服务注册检查失败，已达到最大重试次数");
+                        break;
+                    }
                 }
-            } else {
-                log.warn("❌ admin-module服务未注册成功");
             }
             
-            // 显示所有已注册的服务
-            log.info("已注册服务列表: {}", discoveryClient.getServices());
             log.info("==========================================");
         }
     }

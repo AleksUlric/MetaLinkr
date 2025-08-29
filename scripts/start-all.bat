@@ -74,19 +74,19 @@ if %errorlevel% equ 0 (
     echo ✅ 端口8080可用
 )
 
-:: 检查端口8082 (Log后端)
-echo 检查端口8082 (Log后端)...
-netstat -ano | findstr :8082 >nul
+:: 检查端口8081 (Log后端)
+echo 检查端口8081 (Log后端)...
+netstat -ano | findstr :8081 >nul
 if %errorlevel% equ 0 (
-    echo ⚠️  端口8082已被占用，正在强制释放...
-    for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8082') do (
+    echo ⚠️  端口8081已被占用，正在强制释放...
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8081') do (
         echo 正在终止进程ID: %%a
         taskkill /f /pid %%a 2>nul
     )
     echo 等待2秒让端口完全释放...
     timeout /t 2 /nobreak >nul
 ) else (
-    echo ✅ 端口8082可用
+    echo ✅ 端口8081可用
 )
 
 :: 检查端口5173 (Admin前端)
@@ -122,7 +122,7 @@ if %errorlevel% equ 0 (
 echo.
 echo 1. 启动Nacos服务...
 cd /d "%~dp0..\nacos-server\bin"
-start "Nacos服务" cmd /k "startup.cmd -m standalone"
+start /b "Nacos服务" cmd /c "startup.cmd -m standalone > ..\logs\nacos-startup.log 2>&1"
 echo Nacos启动中，等待15秒...
 timeout /t 15 /nobreak >nul
 
@@ -156,7 +156,7 @@ echo 所有服务启动完成！
 echo ========================================
 echo Nacos控制台: http://localhost:8848/nacos (nacos/nacos)
 echo 后端API: http://localhost:8080
-echo Log后端API: http://localhost:8082
+echo Log后端API: http://localhost:8081
 echo Admin前端: http://localhost:5173
 echo Log前端: http://localhost:5174
 echo 健康检查: http://localhost:8080/actuator/health

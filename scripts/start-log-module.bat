@@ -50,19 +50,19 @@ timeout /t 3 /nobreak >nul
 cd /d "%~dp0..\linkr-server\log-module"
 echo 当前目录: %CD%
 
-:: 检查端口8082是否被占用
-echo 检查端口8082是否被占用...
-netstat -ano | findstr :8082 >nul
+:: 检查端口8081是否被占用
+echo 检查端口8081是否被占用...
+netstat -ano | findstr :8081 >nul
 if %errorlevel% equ 0 (
-    echo ⚠️  端口8082已被占用，正在强制释放...
-    for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8082') do (
+    echo ⚠️  端口8081已被占用，正在强制释放...
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8081') do (
         echo 正在终止进程ID: %%a
         taskkill /f /pid %%a 2>nul
     )
     echo 等待3秒让端口完全释放...
     timeout /t 3 /nobreak >nul
 ) else (
-    echo ✅ 端口8082可用
+    echo ✅ 端口8081可用
 )
 
 echo 检查Java环境...
@@ -124,7 +124,7 @@ echo ✓ 编译成功
 echo.
 echo 正在启动Spring Boot微服务...
 echo 注意: 如果服务启动失败，请检查以下内容：
-echo 1. 端口8082是否被占用
+echo 1. 端口8081是否被占用
 echo 2. MySQL服务是否正常运行
 echo 3. linkr_log数据库是否存在
 echo 4. Nacos服务是否启动
@@ -137,17 +137,17 @@ timeout /t 15 /nobreak >nul
 
 echo.
 echo 检查服务启动状态...
-netstat -ano | findstr :8082 >nul
+netstat -ano | findstr :8081 >nul
 if errorlevel 1 (
-    echo ⚠️  警告: 服务可能启动失败，端口8082未监听
+    echo ⚠️  警告: 服务可能启动失败，端口8081未监听
     echo 请检查启动窗口中的错误信息
     echo 常见问题：
     echo 1. 数据库连接失败 - 检查MySQL和linkr_log数据库
-    echo 2. 端口被占用 - 检查是否有其他服务占用8082端口
+    echo 2. 端口被占用 - 检查是否有其他服务占用8081端口
     echo 3. 依赖缺失 - 检查Maven依赖是否正确下载
     echo 4. 配置错误 - 检查application.yml配置文件
 ) else (
-    echo ✅ 服务启动成功，端口8082已监听
+    echo ✅ 服务启动成功，端口8081已监听
 )
 
 echo.
@@ -155,9 +155,9 @@ echo ========================================
 echo 服务启动信息
 echo ========================================
 echo 服务名称: log-module
-echo 服务端口: 8082
-echo 服务地址: http://localhost:8082
-echo 健康检查: http://localhost:8082/actuator/health
+echo 服务端口: 8081
+echo 服务地址: http://localhost:8081
+echo 健康检查: http://localhost:8081/actuator/health
 echo Nacos控制台: http://localhost:8848/nacos
 echo ========================================
 echo.

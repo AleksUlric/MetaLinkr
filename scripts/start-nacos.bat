@@ -28,7 +28,11 @@ echo.
 echo 正在停止Nacos服务...
 cd /d "%~dp0..\nacos-server\bin"
 call shutdown.cmd
-taskkill /f /fi "WINDOWTITLE eq Nacos服务*" 2>nul
+:: 查找并终止nacos相关进程
+for /f "tokens=2" %%a in ('tasklist /fi "imagename eq java.exe" /fo csv ^| findstr /i nacos') do (
+    echo 正在终止Nacos进程: %%a
+    taskkill /f /pid %%a 2>nul
+)
 echo Nacos服务已停止
 if "%1"=="stop" (
     pause
@@ -40,7 +44,11 @@ echo.
 echo 正在重启Nacos服务...
 cd /d "%~dp0..\nacos-server\bin"
 call shutdown.cmd
-taskkill /f /fi "WINDOWTITLE eq Nacos服务*" 2>nul
+:: 查找并终止nacos相关进程
+for /f "tokens=2" %%a in ('tasklist /fi "imagename eq java.exe" /fo csv ^| findstr /i nacos') do (
+    echo 正在终止Nacos进程: %%a
+    taskkill /f /pid %%a 2>nul
+)
 echo 等待5秒后重新启动...
 timeout /t 5 /nobreak >nul
 
@@ -64,8 +72,8 @@ if %errorlevel% equ 0 (
 )
 
 echo.
-echo 正在启动Nacos服务...
-start "Nacos服务" cmd /k "startup.cmd -m standalone"
+echo 正在启动Nacos服务（后台运行）...
+start /b "Nacos服务" cmd /c "startup.cmd -m standalone > ..\logs\nacos-startup.log 2>&1"
 
 echo.
 echo 等待Nacos启动...
@@ -83,8 +91,9 @@ echo 配置组: DEFAULT_GROUP
 echo ========================================
 echo.
 echo 使用方法:
-echo   start-nacos.bat        - 启动Nacos服务
+echo   start-nacos.bat        - 启动Nacos服务（后台运行）
 echo   start-nacos.bat stop   - 停止Nacos服务
+echo   check-nacos.bat        - 检查Nacos服务状态
 echo   start-nacos.bat restart - 重启Nacos服务
 echo.
 echo 请访问Nacos控制台确认服务状态

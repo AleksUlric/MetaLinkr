@@ -1,5 +1,6 @@
 @echo off
 chcp 65001 >nul
+setlocal enabledelayedexpansion
 echo ========================================
 echo MetaLinkr 服务状态检查
 echo ========================================
@@ -32,11 +33,11 @@ if %errorlevel% equ 0 (
 )
 
 echo.
-echo 🔍 检查Log后端服务 (端口8082)...
-netstat -ano | findstr :8082 >nul
+echo 🔍 检查Log后端服务 (端口8081)...
+netstat -ano | findstr :8081 >nul
 if %errorlevel% equ 0 (
     echo ✅ Log后端服务正在运行
-    for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8082') do (
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8081') do (
         echo    进程ID: %%a
     )
 ) else (
@@ -93,7 +94,7 @@ echo 服务访问地址
 echo ========================================
 echo 🌐 Nacos控制台: http://localhost:8848/nacos
 echo 🔧 Admin后端API: http://localhost:8080
-echo 📝 Log后端API: http://localhost:8082
+echo 📝 Log后端API: http://localhost:8081
 echo 📊 健康检查: http://localhost:8080/actuator/health
 echo 🖥️  Admin前端: http://localhost:5173
 echo 📝 Log前端: http://localhost:5174

@@ -93,7 +93,7 @@ echo 启动Log前端服务...
 echo ========================================
 echo 服务名称: log-front
 echo 服务端口: 5174
-echo 后端API: http://localhost:8082
+echo 后端API: http://localhost:8081
 echo 技术栈: Vue 3 + TypeScript + Element Plus
 echo ========================================
 echo 按 Ctrl+C 停止服务
@@ -106,7 +106,7 @@ echo ========================================
 echo Log前端服务启动完成！
 echo ========================================
 echo 访问地址: http://localhost:5174
-echo 后端API: http://localhost:8082
+echo 后端API: http://localhost:8081
 echo ========================================
 echo.
 echo 使用方法:

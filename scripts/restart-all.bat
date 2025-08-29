@@ -1,5 +1,6 @@
 @echo off
 chcp 65001 >nul
+setlocal enabledelayedexpansion
 echo ========================================
 echo MetaLinkr 一键重启脚本
 echo ========================================
@@ -19,7 +20,7 @@ echo.
 echo 服务列表:
 echo   Nacos服务: http://localhost:8848/nacos
 echo   后端服务: http://localhost:8080
-echo   Log后端: http://localhost:8082
+echo   Log后端: http://localhost:8081
 echo   Admin前端: http://localhost:5173
 echo   Log前端: http://localhost:5174
 echo.

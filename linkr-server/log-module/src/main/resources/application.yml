@@ -1,5 +1,5 @@
 server:
-  port: 8082
+  port: 8081
   servlet:
     context-path: /
   compression:
@@ -47,7 +47,7 @@ spring:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
     cache-enabled: false
   global-config:
     db-config:
@@ -63,8 +63,8 @@ logging:
   level:
     com.aleks.linkrmix.log: debug
     org.springframework.web: info
-    com.baomidou.mybatisplus: info
-    org.apache.ibatis: info
+    com.baomidou.mybatisplus: warn
+    org.apache.ibatis: warn
 
 management:
   endpoints:
