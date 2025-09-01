@@ -19,6 +19,7 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
   
+  # 数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/linkr_log?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&allowMultiQueries=true&autoReconnect=true&failOverReadOnly=false&maxReconnects=10&initialTimeout=10&socketTimeout=30000&connectTimeout=30000&rewriteBatchedStatements=true&useServerPrepStmts=true&cachePrepStmts=true&cacheResultSetMetadata=true&cacheServerConfiguration=true&elideSetAutoCommits=true&maintainTimeStats=false&createDatabaseIfNotExist=true
@@ -34,6 +35,25 @@ spring:
       validation-timeout: 5000
       leak-detection-threshold: 60000
     
+  # Kafka配置
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: log-module
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.aleks.linkrmix.common.model.vo
+        spring.json.type-mapping: log:com.aleks.linkrmix.common.model.vo.LogVO
+
+# Kafka主题配置
+kafka:
+  topic:
+    log: admin-logs
+
+# Nacos配置
+spring:
   cloud:
     nacos:
       discovery:
@@ -44,10 +64,11 @@ spring:
         register-enabled: true
         ephemeral: true
 
+# MyBatis Plus配置
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     cache-enabled: false
   global-config:
     db-config:
@@ -59,12 +80,20 @@ mybatis-plus:
 
 
 
+# 日志配置
 logging:
   level:
-    com.aleks.linkrmix.log: debug
-    org.springframework.web: info
-    com.baomidou.mybatisplus: warn
-    org.apache.ibatis: warn
+    com.aleks.linkrmix: DEBUG
+    org.springframework.kafka: INFO
+    org.apache.kafka: WARN
+    org.springframework.web.socket: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# WebSocket配置
+websocket:
+  endpoint: /ws/logs
+  allowed-origins: "*"
 
 management:
   endpoints:

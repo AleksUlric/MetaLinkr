@@ -64,3 +64,23 @@ export interface LogOverview {
     count: number
   }>
 }
+
+// 日志VO接口 - 用于微服务间传输
+export interface LogVO {
+  id?: string
+  userId?: string
+  username?: string
+  operation?: string
+  method?: string
+  params?: string
+  ip?: string
+  userAgent?: string
+  status?: number
+  errorMsg?: string
+  executionTime?: number
+  createTime?: string | Date
+  module?: string
+  level?: string
+  serviceName?: string
+  servicePort?: number
+}

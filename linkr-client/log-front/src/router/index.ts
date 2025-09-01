@@ -32,6 +32,11 @@ const routes: RouteRecordRaw[] = [
         path: '/alerts',
         name: 'AlertConfiguration',
         component: () => import('../views/AlertConfiguration.vue')
+      },
+      {
+        path: '/realtime',
+        name: 'RealTimeLogs',
+        component: () => import('../views/RealTimeLogs.vue')
       }
     ]
   }

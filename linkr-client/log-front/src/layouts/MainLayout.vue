@@ -46,6 +46,10 @@
             <el-icon><Bell /></el-icon>
             <span>告警配置</span>
           </el-menu-item>
+          <el-menu-item index="/realtime">
+            <el-icon><Monitor /></el-icon>
+            <span>实时日志</span>
+          </el-menu-item>
         </el-menu>
       </el-aside>
 

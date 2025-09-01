@@ -1,53 +1,93 @@
 package com.aleks.linkrmix.admin.controller;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.aleks.linkrmix.admin.service.LogService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import javax.annotation.Resource;
 
 /**
  * 测试控制器
+ * 用于测试日志发送功能
  * 
- * @author Aleks
- * @version 1.0.0
+ * @author aleks
+ * @since 2024-01-15
  */
+@Slf4j
 @RestController
-@RequestMapping("/test")
+@RequestMapping("/api/test")
 public class TestController {
-
-    @Value("${spring.application.name}")
-    private String serviceName;
     
-    @Value("${server.port}")
-    private String serverPort;
-
+    @Resource
+    private LogService logService;
+    
     /**
-     * 测试服务是否正常运行
+     * 测试发送操作日志
      */
-    @GetMapping("/ping")
-    public Map<String, Object> ping() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "pong");
-        response.put("service", serviceName);
-        response.put("timestamp", System.currentTimeMillis());
-        response.put("status", "UP");
-        return response;
+    @PostMapping("/log/operation")
+    public String testOperationLog(@RequestParam String userId, 
+                                   @RequestParam String username, 
+                                   @RequestParam String operation) {
+        try {
+            logService.sendOperationLog(userId, username, operation, 
+                "TestController.testOperationLog", "测试操作日志");
+            
+            log.info("测试操作日志发送成功: userId={}, username={}, operation={}", 
+                userId, username, operation);
+            
+            return "操作日志发送成功";
+        } catch (Exception e) {
+            log.error("测试操作日志发送失败", e);
+            return "操作日志发送失败: " + e.getMessage();
+        }
     }
-
+    
     /**
-     * 获取服务基本信息
+     * 测试发送错误日志
      */
-    @GetMapping("/info")
-    public Map<String, Object> getInfo() {
-        Map<String, Object> info = new HashMap<>();
-        info.put("serviceName", serviceName);
-        info.put("version", "1.0.0");
-        info.put("description", "Admin management service");
-        info.put("port", Integer.parseInt(serverPort));
-        info.put("nacosServer", "127.0.0.1:8848");
-        return info;
+    @PostMapping("/log/error")
+    public String testErrorLog(@RequestParam String userId, 
+                               @RequestParam String username, 
+                               @RequestParam String operation) {
+        try {
+            logService.sendErrorLog(userId, username, operation, 
+                "TestController.testErrorLog", "测试错误日志", 150L);
+            
+            log.info("测试错误日志发送成功: userId={}, username={}, operation={}", 
+                userId, username, operation);
+            
+            return "错误日志发送成功";
+        } catch (Exception e) {
+            log.error("测试错误日志发送失败", e);
+            return "错误日志发送失败: " + e.getMessage();
+        }
+    }
+    
+    /**
+     * 测试发送自定义日志
+     */
+    @PostMapping("/log/custom")
+    public String testCustomLog(@RequestParam String userId, 
+                                @RequestParam String username, 
+                                @RequestParam String operation,
+                                @RequestParam(defaultValue = "INFO") String level) {
+        try {
+            // 这里可以调用logService.sendLog()方法发送自定义日志
+            log.info("测试自定义日志: userId={}, username={}, operation={}, level={}", 
+                userId, username, operation, level);
+            
+            return "自定义日志发送成功";
+        } catch (Exception e) {
+            log.error("测试自定义日志发送失败", e);
+            return "自定义日志发送失败: " + e.getMessage();
+        }
+    }
+    
+    /**
+     * 健康检查
+     */
+    @GetMapping("/health")
+    public String health() {
+        return "TestController is running";
     }
 }

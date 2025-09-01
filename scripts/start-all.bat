@@ -151,6 +151,12 @@ echo Log前端启动中，等待5秒...
 timeout /t 5 /nobreak >nul
 
 echo.
+echo 6. 启动CMAK服务...
+call "%~dp0start-cmak.bat"
+echo CMAK启动中，等待5秒...
+timeout /t 5 /nobreak >nul
+
+echo.
 echo ========================================
 echo 所有服务启动完成！
 echo ========================================
@@ -159,6 +165,7 @@ echo 后端API: http://localhost:8080
 echo Log后端API: http://localhost:8081
 echo Admin前端: http://localhost:5173
 echo Log前端: http://localhost:5174
+echo CMAK控制台: http://localhost:9000
 echo 健康检查: http://localhost:8080/actuator/health
 echo ========================================
 echo.
@@ -168,6 +175,7 @@ echo   后端服务: 管理后台API (admin-module)
 echo   Log后端: 日志管理API (log-module)
 echo   Admin前端: 管理后台界面
 echo   Log前端: 日志管理界面
+echo   CMAK服务: Kafka集群管理工具
 echo.
 echo 使用方法:
 echo   start-all.bat        - 启动所有服务

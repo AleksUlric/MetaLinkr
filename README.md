@@ -20,6 +20,7 @@ MetaLinkr 是一个全栈管理系统平台，采用前后端分离架构，支�
 - [Admin-Front](./linkr-client/linkr-dashboard/admin-front.md) - 管理员前端应用
 - [Log-Front](./linkr-client/linkr-log/log-front.md) - 日志管理前端应用
 - [Nacos-Server](./nacos-server/nacos-server.md) - 服务注册与配置中心
+- [CMAK-Server](./cmak-server/cmak-server.md) - Kafka集群管理工具
 - [Common-Module](./linkr-server/common-module/common-module.md) - 统一错误处理系统
 
 ## 🏗️ 项目结构
@@ -75,10 +76,25 @@ MetaLinkr/
 │   ├── bin/                  # 启动脚本
 │   ├── conf/                 # 配置文件
 │   └── data/                 # 数据存储
+├── cmak-server/              # CMAK Kafka集群管理工具
+│   ├── bin/                  # 启动脚本
+│   ├── conf/                 # 配置文件
+│   └── logs/                 # 日志文件
 ├── deploy/                   # 部署相关文件
 │   ├── backend/              # 后端部署文件
 │   └── frontend/             # 前端部署文件
-├── *.bat                     # Windows批处理脚本
+├── scripts/                  # 批处理脚本目录
+│   ├── start-all.bat         # 一键启动所有服务
+│   ├── start-admin-module.bat # 管理员模块启动脚本
+│   ├── start-log-module.bat  # 日志模块启动脚本
+│   ├── start-admin-front.bat # 管理员前端启动脚本
+│   ├── start-log-front.bat   # 日志前端启动脚本
+│   ├── start-mysql.bat       # MySQL服务管理脚本
+│   ├── start-nacos.bat       # Nacos服务管理脚本
+│   ├── start-cmak.bat        # CMAK服务启动脚本
+│   ├── check-status.bat      # 服务状态检查脚本
+│   ├── stop-all.bat          # 停止所有服务脚本
+│   └── restart-all.bat       # 重启所有服务脚本
 ├── package.json              # 根目录脚本配置
 └── README.md                 # 项目说明文档
 ```
@@ -90,6 +106,88 @@ MetaLinkr/
 - Maven 3.6+
 - MySQL 8.0+
 - Node.js 16+
+
+### 脚本编码优化
+项目中的批处理脚本已进行编码优化，解决Windows命令行中的乱码问题：
+
+#### 🎯 优化目标
+- 解决Windows命令行中批处理脚本的乱码问题
+- 提升用户体验和界面美观性
+
+#### 🔧 主要修改内容
+
+**1. 编码设置**
+- 在所有脚本开头添加 `chcp 65001 >nul`
+- 设置控制台编码为UTF-8，支持中文和特殊字符显示
+
+**2. 图标使用**
+使用直观的图标替代英文标识，提升用户体验：
+
+| 图标 | 含义 | 使用场景 |
+|------|------|----------|
+| ✅ | 成功/正常 | 服务启动成功、端口可用等 |
+| ❌ | 失败/错误 | 服务启动失败、端口被占用等 |
+| 🔍 | 检查/搜索 | 检查服务状态、端口占用等 |
+| 🚀 | 启动/运行 | 服务启动、开始操作等 |
+| 🛑 | 停止 | 服务停止、操作终止等 |
+| 🔄 | 重启 | 服务重启、重新开始等 |
+| ⚠️ | 警告 | 端口被占用、文件缺失等 |
+| 💡 | 提示/建议 | 使用说明、操作建议等 |
+| 📊 | 信息/状态 | 服务信息、状态显示等 |
+| 🌐 | 网络/地址 | 访问地址、网络相关等 |
+| 🔧 | 配置/设置 | 服务配置、系统设置等 |
+| 📝 | 日志/记录 | 日志信息、记录相关等 |
+| 🖥️ | 前端/界面 | 前端服务、用户界面等 |
+| 📁 | 目录/文件 | 文件路径、目录信息等 |
+| 📅 | 时间/日期 | 时间显示、日期信息等 |
+| 🔗 | 链接/连接 | 访问链接、连接信息等 |
+| 👤 | 用户/账号 | 用户信息、账号相关等 |
+| 🔑 | 密码/密钥 | 密码信息、密钥相关等 |
+| 📋 | 配置/参数 | 配置参数、设置选项等 |
+| ❓ | 询问/选择 | 用户选择、确认操作等 |
+| 🚫 | 终止/禁止 | 进程终止、操作禁止等 |
+| ⏳ | 等待/加载 | 等待时间、加载状态等 |
+
+**3. 已优化的脚本文件**
+- ✅ `start-cmak.bat` - CMAK服务启动脚本
+- ✅ `cmak-server/bin/startup.cmd` - CMAK服务启动命令
+- ✅ `check-status.bat` - 服务状态检查脚本
+- ✅ `start-mysql.bat` - MySQL服务管理脚本
+- ✅ `start-nacos.bat` - Nacos服务管理脚本
+- ✅ `start-all.bat` - 一键启动所有服务脚本
+- ✅ `start-admin-module.bat` - 管理员模块启动脚本
+- ✅ `start-log-module.bat` - 日志模块启动脚本
+- ✅ `start-admin-front.bat` - 管理员前端启动脚本
+- ✅ `start-log-front.bat` - 日志前端启动脚本
+- ✅ `stop-all.bat` - 停止所有服务脚本
+- ✅ `restart-all.bat` - 重启所有服务脚本
+
+#### 🎨 优化效果
+
+**优化前**
+- 特殊字符显示为乱码
+- 英文标识不够直观
+- 用户体验较差
+
+**优化后**
+- 中文显示正常，无乱码
+- 图标直观易懂
+- 界面美观友好
+- 用户体验显著提升
+
+#### 💡 注意事项
+
+1. **编码设置**: 确保所有脚本都包含 `chcp 65001 >nul`
+2. **图标兼容性**: 使用的图标在Windows 10及以上版本支持良好
+3. **中文显示**: 脚本中的中文内容现在可以正常显示
+4. **PowerShell支持**: 在PowerShell中运行可能需要使用 `.\` 前缀
+
+#### 🔄 维护建议
+
+1. 新增脚本时，记得添加编码设置
+2. 保持图标使用的一致性
+3. 定期检查脚本的编码状态
+4. 如有新的图标需求，可以扩展图标库
 
 ### 一键启动
 
@@ -122,6 +220,9 @@ start-log-module.bat
 
 # 启动Log前端服务
 start-log-front.bat
+
+# 启动CMAK服务
+start-cmak.bat
 ```
 
 **手动启动：**
@@ -168,6 +269,7 @@ npm run dev
 - **健康检查**: http://localhost:8080/actuator/health
 - **Dashboard前端**: http://localhost:5173
 - **Log前端**: http://localhost:5174
+- **CMAK控制台**: http://localhost:9000
 
 ### 服务状态检查
 ```bash
@@ -178,6 +280,7 @@ check-status.bat
 netstat -ano | findstr :8080  # 检查后端服务
 netstat -ano | findstr :5173  # 检查前端服务
 netstat -ano | findstr :8848  # 检查Nacos服务
+netstat -ano | findstr :9000  # 检查CMAK服务
 ```
 
 ## 📱 多端支持
@@ -222,8 +325,30 @@ netstat -ano | findstr :8848  # 检查Nacos服务
 ### Log-Module (日志模块)
 - **功能**: 日志收集、存储、查询、分析
 - **端口**: 8081
-- **技术栈**: Spring Boot + MyBatis Plus + Logback
+- **技术栈**: Spring Boot + MyBatis Plus + Logback + Kafka + WebSocket
 - **详细文档**: [日志模块文档](./linkr-server/log-module/log-module.md)
+
+## 🔄 日志系统架构
+
+### 当前实现方案 (v1.4.2)
+- **存储**: MySQL + Kafka
+- **实时推送**: WebSocket
+- **日志收集**: 通过Kafka消息队列实现异步解耦
+
+### 未来扩展方案 (v1.5.0+)
+- **存储**: MySQL + Elasticsearch (ES)
+- **搜索分析**: ES提供强大的全文搜索和聚合分析能力
+- **混合存储策略**: 
+  - MySQL: 最近30天日志，保证事务性
+  - ES: 历史日志，提供搜索分析功能
+
+### ES优势说明
+- **不是传统数据库**: ES是分布式搜索引擎，专门为日志分析设计
+- **核心特性**: 全文搜索、实时分析、水平扩展、聚合统计
+- **适用场景**: 日志搜索、性能分析、业务统计、告警监控
+- **与MySQL对比**: 
+  - MySQL: 事务处理、结构化查询、数据一致性
+  - ES: 全文搜索、大数据分析、实时聚合
 
 ### Admin-Front (管理员前端)
 - **功能**: PC端管理界面
@@ -236,6 +361,12 @@ netstat -ano | findstr :8848  # 检查Nacos服务
 - **端口**: 8848
 - **技术栈**: Nacos 2.2.3
 - **详细文档**: [Nacos文档](./nacos-server/nacos-server.md)
+
+### CMAK (Kafka集群管理)
+- **功能**: Kafka集群管理、主题管理、消费者组监控
+- **端口**: 9000
+- **技术栈**: Play Framework + Java
+- **详细文档**: [CMAK文档](./cmak-server/cmak-server.md)
 
 ## 🛠️ 服务管理脚本
 
@@ -523,7 +654,7 @@ src/main/java/com/aleks/linkrmix/{module}/
 #### 2. 架构规范
 - **只保留实现类**，不需要接口和实现分离
 - 直接使用 `@Component` 注解，Spring自动管理
-- 使用 `@RequiredArgsConstructor` 进行依赖注入
+- 使用 `@Resource` 注解进行依赖注入（推荐）或 `@RequiredArgsConstructor`
 
 #### 3. 联查逻辑规范
 - **多个表联查的逻辑放在主表对应的Manager类中**
@@ -535,11 +666,13 @@ src/main/java/com/aleks/linkrmix/{module}/
 ```java
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class LogEntryManager {
     
-    private final LogEntryMapper logEntryMapper;
-    private final ServiceInfoMapper serviceInfoMapper; // 联查时注入其他Mapper
+    @Resource
+    private LogEntryMapper logEntryMapper;
+    
+    @Resource
+    private ServiceInfoMapper serviceInfoMapper; // 联查时注入其他Mapper
     
     // 基础CRUD方法
     public void save(LogEntry logEntry) {
@@ -606,6 +739,10 @@ public class LogEntryManager {
 - 统一响应格式和错误码
 - Manager层直接接收DTO参数，使用Wrapper或Mapper进行数据库操作，无需接口+实现模式
 - 所有公共组件统一放在common包下
+- **依赖注入规范**：
+  - 推荐使用 `@Resource` 注解进行依赖注入
+  - 也可以使用 `@RequiredArgsConstructor` + `final` 字段的方式
+  - 避免使用 `@Autowired` 注解（Spring推荐使用构造器注入或字段注入）
 - **Controller接口规范**：
   - 请求参数必须使用DTO封装，禁止使用Map<String, Object>等泛型参数
   - 返回结果必须使用VO封装，确保接口文档清晰
@@ -615,7 +752,15 @@ public class LogEntryManager {
 
 ## 🔄 版本历史
 
-### v1.4.1 (当前版本)
+### v1.4.2 (当前版本)
+- ✅ 实现MySQL + Kafka + WebSocket的实时日志系统
+- ✅ admin-module作为日志生产者，通过Kafka发送日志消息
+- ✅ log-module作为日志消费者，从Kafka消费日志并实时推送到前端
+- ✅ 集成实时日志查看页面到log前端模块
+- ✅ 优化依赖注入规范，统一使用@Resource注解
+- ✅ 创建测试Controller验证日志发送功能
+
+### v1.4.1
 - ✅ 为admin-module添加日志收集功能
 - ✅ admin-module配置DatabaseAppender，支持日志自动收集
 - ✅ nacos-server恢复官方默认日志配置，保持稳定性
