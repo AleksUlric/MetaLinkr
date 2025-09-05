@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  kafka-registry:
+    image: openjdk:11-jre-slim
+    container_name: kafka-registry
+    depends_on:
+      - kafka
+      - nacos
+    environment:
+      - NACOS_SERVER_ADDR=nacos:8848
+      - KAFKA_SERVER_ADDR=kafka:9092
+      - SERVICE_NAME=kafka-service
+      - SERVICE_IP=kafka
+      - SERVICE_PORT=9092
+    command: |
+      sh -c "
+        echo 'Waiting for services to be ready...'
+        sleep 30
+        echo 'Registering Kafka service to Nacos...'
+        curl -X POST 'http://nacos:8848/nacos/v1/ns/instance' \
+          -d 'serviceName=kafka-service' \
+          -d 'ip=kafka' \
+          -d 'port=9092' \
+          -d 'namespaceId=public' \
+          -d 'groupName=DEFAULT_GROUP' \
+          -d 'metadata={"type":"message-queue","version":"3.7.0","description":"Apache Kafka Message Queue"}'
+        echo 'Kafka service registered successfully!'
+        tail -f /dev/null
+      "
+    restart: unless-stopped
+    networks:
+      - default

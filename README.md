@@ -20,7 +20,6 @@ MetaLinkr 是一个全栈管理系统平台，采用前后端分离架构，支�
 - [Admin-Front](./linkr-client/linkr-dashboard/admin-front.md) - 管理员前端应用
 - [Log-Front](./linkr-client/linkr-log/log-front.md) - 日志管理前端应用
 - [Nacos-Server](./nacos-server/nacos-server.md) - 服务注册与配置中心
-- [CMAK-Server](./cmak-server/cmak-server.md) - Kafka集群管理工具
 - [Common-Module](./linkr-server/common-module/common-module.md) - 统一错误处理系统
 
 ## 🏗️ 项目结构
@@ -76,10 +75,6 @@ MetaLinkr/
 │   ├── bin/                  # 启动脚本
 │   ├── conf/                 # 配置文件
 │   └── data/                 # 数据存储
-├── cmak-server/              # CMAK Kafka集群管理工具
-│   ├── bin/                  # 启动脚本
-│   ├── conf/                 # 配置文件
-│   └── logs/                 # 日志文件
 ├── deploy/                   # 部署相关文件
 │   ├── backend/              # 后端部署文件
 │   └── frontend/             # 前端部署文件
@@ -91,7 +86,6 @@ MetaLinkr/
 │   ├── start-log-front.bat   # 日志前端启动脚本
 │   ├── start-mysql.bat       # MySQL服务管理脚本
 │   ├── start-nacos.bat       # Nacos服务管理脚本
-│   ├── start-cmak.bat        # CMAK服务启动脚本
 │   ├── check-status.bat      # 服务状态检查脚本
 │   ├── stop-all.bat          # 停止所有服务脚本
 │   └── restart-all.bat       # 重启所有服务脚本
@@ -149,8 +143,6 @@ MetaLinkr/
 | ⏳ | 等待/加载 | 等待时间、加载状态等 |
 
 **3. 已优化的脚本文件**
-- ✅ `start-cmak.bat` - CMAK服务启动脚本
-- ✅ `cmak-server/bin/startup.cmd` - CMAK服务启动命令
 - ✅ `check-status.bat` - 服务状态检查脚本
 - ✅ `start-mysql.bat` - MySQL服务管理脚本
 - ✅ `start-nacos.bat` - Nacos服务管理脚本
@@ -221,8 +213,6 @@ start-log-module.bat
 # 启动Log前端服务
 start-log-front.bat
 
-# 启动CMAK服务
-start-cmak.bat
 ```
 
 **手动启动：**
@@ -269,7 +259,6 @@ npm run dev
 - **健康检查**: http://localhost:8080/actuator/health
 - **Dashboard前端**: http://localhost:5173
 - **Log前端**: http://localhost:5174
-- **CMAK控制台**: http://localhost:9000
 
 ### 服务状态检查
 ```bash
@@ -280,7 +269,7 @@ check-status.bat
 netstat -ano | findstr :8080  # 检查后端服务
 netstat -ano | findstr :5173  # 检查前端服务
 netstat -ano | findstr :8848  # 检查Nacos服务
-netstat -ano | findstr :9000  # 检查CMAK服务
+netstat -ano | findstr :9092  # 检查Kafka服务
 ```
 
 ## 📱 多端支持
@@ -362,11 +351,6 @@ netstat -ano | findstr :9000  # 检查CMAK服务
 - **技术栈**: Nacos 2.2.3
 - **详细文档**: [Nacos文档](./nacos-server/nacos-server.md)
 
-### CMAK (Kafka集群管理)
-- **功能**: Kafka集群管理、主题管理、消费者组监控
-- **端口**: 9000
-- **技术栈**: Play Framework + Java
-- **详细文档**: [CMAK文档](./cmak-server/cmak-server.md)
 
 ## 🛠️ 服务管理脚本
 
@@ -382,10 +366,12 @@ start-all.bat restart  # 重启所有服务
 ```
 
 **启动顺序**:
-1. Nacos服务 (等待15秒)
-2. Admin后端服务 (等待10秒)
-3. Dashboard前端服务 (等待5秒)
-4. Log前端服务 (等待5秒)
+1. Kafka服务 (等待15秒)
+2. Nacos服务 (等待15秒)
+3. Admin后端服务 (等待10秒)
+4. Log后端服务 (等待10秒)
+5. Admin前端服务 (等待5秒)
+6. Log前端服务 (等待5秒)
 
 #### 2. stop-all.bat - 停止所有服务
 **功能**: 停止所有运行中的服务

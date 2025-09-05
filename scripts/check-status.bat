@@ -79,17 +79,6 @@ if %errorlevel% equ 0 (
     echo ❌ Log前端服务未运行
 )
 
-echo.
-echo 🔍 检查CMAK服务 (端口9000)...
-netstat -ano | findstr :9000 >nul
-if %errorlevel% equ 0 (
-    echo ✅ CMAK服务正在运行
-    for /f "tokens=5" %%a in ('netstat -ano ^| findstr :9000') do (
-        echo    进程ID: %%a
-    )
-) else (
-    echo ❌ CMAK服务未运行
-)
 
 echo.
 echo 🔍 检查Java进程...
@@ -121,7 +110,7 @@ echo 📝 Log后端API: http://localhost:8081
 echo 📊 健康检查: http://localhost:8080/actuator/health
 echo 🖥️  Admin前端: http://localhost:5173
 echo 📝 Log前端: http://localhost:5174
-echo 🚀 CMAK控制台: http://localhost:9000
+echo 🚀 Kafka服务: localhost:9092 (KRaft模式)
 echo ========================================
 
 echo.

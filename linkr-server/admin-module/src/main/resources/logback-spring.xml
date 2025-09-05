@@ -48,15 +48,15 @@
         </encoder>
     </appender>
     
-    <!-- 数据库日志Appender -->
-    <appender name="DATABASE" class="com.aleks.linkrmix.admin.common.config.DatabaseAppender"/>
+    <!-- Kafka日志Appender -->
+    <appender name="KAFKA" class="com.aleks.linkrmix.admin.common.config.DatabaseAppender"/>
     
     <!-- 应用日志级别 -->
     <logger name="com.aleks.linkrmix.admin" level="DEBUG" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
         <appender-ref ref="ERROR_FILE"/>
-        <appender-ref ref="DATABASE"/>
+        <appender-ref ref="KAFKA"/>
     </logger>
     
     <!-- Spring框架日志 -->

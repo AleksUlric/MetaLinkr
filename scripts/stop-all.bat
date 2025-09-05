@@ -6,6 +6,9 @@ echo MetaLinkr 停止所有服务
 echo ========================================
 echo 正在停止所有服务...
 
+echo 停止Kafka服务...
+call "%~dp0stop-kafka.bat"
+
 echo 停止Nacos服务...
 cd /d "%~dp0..\nacos-server\bin"
 call shutdown.cmd

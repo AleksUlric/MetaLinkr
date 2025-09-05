@@ -76,6 +76,12 @@
             <optional>true</optional>
         </dependency>
         
+        <!-- Java 11 兼容性：javax.annotation-api -->
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+        </dependency>
+        
         <!-- Nacos Discovery -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
