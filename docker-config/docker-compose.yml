@@ -1,12 +1,16 @@
 services:
+  # Nacos - 轻量化配置
   nacos:
     image: nacos/nacos-server:v2.2.3
-    container_name: nacos-server
+    container_name: nacos-server-minimal
     ports:
       - "8848:8848"
       - "9848:9848"
     environment:
+      # 运行模式
       - MODE=standalone
+      
+      # 数据库配置
       - SPRING_DATASOURCE_PLATFORM=mysql
       - MYSQL_SERVICE_HOST=host.docker.internal
       - MYSQL_SERVICE_PORT=3306
@@ -14,72 +18,78 @@ services:
       - MYSQL_SERVICE_USER=root
       - MYSQL_SERVICE_PASSWORD=Xing@1225
       - MYSQL_SERVICE_DB_PARAM=characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true
-      # 禁用认证 - 后续需要启用
+      
+      # JVM参数优化 - 减少内存占用
+      - JVM_XMS=128m
+      - JVM_XMX=256m
+      - JVM_XMN=64m
+      - JVM_MS=128m
+      - JVM_MMS=256m
+      
+      # 认证配置
       - NACOS_AUTH_ENABLED=false
       - NACOS_AUTH_TOKEN=SecretKey012345678901234567890123456789012345678901234567890123456789
       - NACOS_AUTH_IDENTITY_KEY=serverIdentity
       - NACOS_AUTH_IDENTITY_VALUE=security
+      
+      # 性能优化配置
+      - NACOS_SERVER_PORT=8848
+      - NACOS_SERVER_IP=127.0.0.1
+      - NACOS_SERVER_SERVLET_CONTEXTPATH=/nacos
+      - NACOS_SERVER_LOG_PATH=/home/nacos/logs
+      
+      # 集群配置优化
+      - NACOS_SERVER_NAMESPACE=public
+      - NACOS_SERVER_NAMESPACE_LOAD_CACHE_AT_START=false
+      
+      # 日志配置优化
+      - NACOS_LOG_LEVEL=WARN
+      - NACOS_LOG_FILE_PATH=/home/nacos/logs
+      
+      # 网络配置优化
+      - NACOS_SERVER_TOMCAT_ACCESSLOG_ENABLED=false
+      - NACOS_SERVER_TOMCAT_ACCESSLOG_PATTERN=%h %l %u %t "%r" %s %b %D
+      
+      # 健康检查配置
+      - NACOS_SERVER_HEALTH_CHECK_ENABLED=true
+      - NACOS_SERVER_HEALTH_CHECK_INTERVAL=30000
+      
     volumes:
       - ./nacos/logs:/home/nacos/logs
       - ./nacos/conf:/home/nacos/conf
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8848/nacos/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
 
-  kafka:
-    image: apache/kafka:3.7.0
-    container_name: kafka
-    ports:
-      - "9092:9092"
-    environment:
-      KAFKA_NODE_ID: 1
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
-      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
-    volumes:
-      - kafka-data:/var/lib/kafka/data
-    restart: unless-stopped
+  # Admin Module - 暂时注释，避免构建问题
+  # admin-module:
+  #   build:
+  #     context: ../linkr-server/admin-module
+  #     dockerfile: Dockerfile
+  #   container_name: admin-module
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     - SPRING_PROFILES_ACTIVE=docker
+  #     - SPRING_DATASOURCE_URL=jdbc:mysql://host.docker.internal:3306/linkr_admin?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+  #     - SPRING_DATASOURCE_USERNAME=root
+  #     - SPRING_DATASOURCE_PASSWORD=Xing@1225
+  #     - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=host.docker.internal:8848
+  #   volumes:
+  #     - ../linkr-server/logs:/app/logs
+  #   depends_on:
+  #     - nacos
+  #   restart: unless-stopped
 
-  kafka-registry:
-    image: openjdk:11-jre-slim
-    container_name: kafka-registry
-    depends_on:
-      - kafka
-      - nacos
-    environment:
-      - NACOS_SERVER_ADDR=nacos:8848
-      - KAFKA_SERVER_ADDR=kafka:9092
-      - SERVICE_NAME=kafka-service
-      - SERVICE_IP=kafka
-      - SERVICE_PORT=9092
-    command: |
-      sh -c "
-        echo 'Waiting for services to be ready...'
-        sleep 30
-        echo 'Registering Kafka service to Nacos...'
-        curl -X POST 'http://nacos:8848/nacos/v1/ns/instance' \
-          -d 'serviceName=kafka-service' \
-          -d 'ip=kafka' \
-          -d 'port=9092' \
-          -d 'namespaceId=public' \
-          -d 'groupName=DEFAULT_GROUP' \
-          -d 'metadata={"type":"message-queue","version":"3.7.0","description":"Apache Kafka Message Queue"}'
-        echo 'Kafka service registered successfully!'
-        tail -f /dev/null
-      "
-    restart: unless-stopped
-
-# 使用host网络模式，不需要自定义网络
-# networks:
-#   linkr-network:
-#     driver: bridge
-
-volumes:
-  kafka-data:

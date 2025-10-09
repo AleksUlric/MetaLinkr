@@ -1,0 +1,52 @@
+# Elasticsearch 8.11.0 轻量级配置
+
+# 集群配置
+cluster.name: "elk-cluster"
+node.name: "elk-node-1"
+
+# 网络配置
+network.host: 0.0.0.0
+http.port: 9200
+transport.port: 9300
+
+# 发现配置 - 单节点模式
+discovery.type: single-node
+
+# 安全配置 - 开发环境禁用
+xpack.security.enabled: false
+xpack.security.enrollment.enabled: false
+xpack.security.http.ssl.enabled: false
+xpack.security.transport.ssl.enabled: false
+
+# 内存和性能优化
+bootstrap.memory_lock: false
+indices.memory.index_buffer_size: 20%
+indices.queries.cache.size: 10%
+
+# 索引配置 - 通过模板设置
+# 注意：Elasticsearch 8.x不允许在节点配置中设置索引级别配置
+# 索引配置将通过索引模板或API设置
+
+# 日志配置
+logger.level: WARN
+logger.org.elasticsearch.transport: INFO
+
+# 路径配置
+path.data: /usr/share/elasticsearch/data
+path.logs: /usr/share/elasticsearch/logs
+
+# 线程池配置 - 轻量级
+thread_pool.write.queue_size: 200
+thread_pool.search.queue_size: 1000
+
+# 缓存配置
+indices.fielddata.cache.size: 20%
+indices.breaker.fielddata.limit: 40%
+indices.breaker.request.limit: 60%
+
+# 熔断器配置 - 增加限制
+indices.breaker.total.use_real_memory: false
+indices.breaker.total.limit: 80%
+
+# 注意：S3 插件已在自定义 Dockerfile 中移除
+# 无需在此配置文件中设置插件相关配置

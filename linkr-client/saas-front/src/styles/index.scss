@@ -1,0 +1,128 @@
+// 全局样式文件
+@import './variables.scss';
+@import './mixins.scss';
+@import './base.scss';
+
+// Element Plus 主题定制
+:root {
+  --el-color-primary: #409eff;
+  --el-color-success: #67c23a;
+  --el-color-warning: #e6a23c;
+  --el-color-danger: #f56c6c;
+  --el-color-info: #909399;
+  
+  // 自定义颜色
+  --saas-primary: #6366f1;
+  --saas-secondary: #8b5cf6;
+  --saas-success: #10b981;
+  --saas-warning: #f59e0b;
+  --saas-danger: #ef4444;
+  --saas-info: #6b7280;
+  
+  // 背景色
+  --saas-bg-primary: #ffffff;
+  --saas-bg-secondary: #f8fafc;
+  --saas-bg-tertiary: #f1f5f9;
+  
+  // 文字颜色
+  --saas-text-primary: #1e293b;
+  --saas-text-secondary: #64748b;
+  --saas-text-tertiary: #94a3b8;
+  
+  // 边框颜色
+  --saas-border: #e2e8f0;
+  --saas-border-light: #f1f5f9;
+  
+  // 阴影
+  --saas-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --saas-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --saas-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --saas-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+// 暗色主题
+.dark {
+  --saas-bg-primary: #0f172a;
+  --saas-bg-secondary: #1e293b;
+  --saas-bg-tertiary: #334155;
+  
+  --saas-text-primary: #f8fafc;
+  --saas-text-secondary: #cbd5e1;
+  --saas-text-tertiary: #94a3b8;
+  
+  --saas-border: #334155;
+  --saas-border-light: #475569;
+}
+
+// 工具类
+.saas-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.saas-card {
+  background: var(--saas-bg-primary);
+  border-radius: 8px;
+  box-shadow: var(--saas-shadow);
+  border: 1px solid var(--saas-border-light);
+}
+
+.saas-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+  
+  &.primary {
+    background: var(--saas-primary);
+    color: white;
+    
+    &:hover {
+      background: var(--saas-primary);
+      opacity: 0.9;
+    }
+  }
+  
+  &.secondary {
+    background: var(--saas-bg-secondary);
+    color: var(--saas-text-primary);
+    border: 1px solid var(--saas-border);
+    
+    &:hover {
+      background: var(--saas-bg-tertiary);
+    }
+  }
+}
+
+// 响应式断点
+@media (max-width: 768px) {
+  .saas-container {
+    padding: 0 16px;
+  }
+}
+
+// 滚动条样式
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--saas-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--saas-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--saas-text-tertiary);
+}

@@ -11,7 +11,7 @@
         </encoder>
     </appender>
     
-    <!-- 文件输出 -->
+    <!-- 文件输出 - ELK优化格式 -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_HOME}/admin-module.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -21,13 +21,35 @@
             </timeBasedFileNamingAndTriggeringPolicy>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-            <charset>UTF-8</charset>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp/>
+                <logLevel/>
+                <loggerName/>
+                <message/>
+                <mdc/>
+                <arguments/>
+                <stackTrace/>
+                <pattern>
+                    <pattern>
+                        {
+                            "service_name": "admin-module",
+                            "service_port": "8080",
+                            "environment": "production",
+                            "cluster": "metalinkr",
+                            "log_category": "application",
+                            "thread_name": "%thread",
+                            "class_name": "%class{36}",
+                            "method_name": "%method",
+                            "line_number": "%line"
+                        }
+                    </pattern>
+                </pattern>
+            </providers>
         </encoder>
     </appender>
     
-    <!-- 错误日志单独输出 -->
+    <!-- 错误日志单独输出 - ELK优化格式 -->
     <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_HOME}/admin-module-error.log</file>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
@@ -42,21 +64,41 @@
             </timeBasedFileNamingAndTriggeringPolicy>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-            <charset>UTF-8</charset>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp/>
+                <logLevel/>
+                <loggerName/>
+                <message/>
+                <mdc/>
+                <arguments/>
+                <stackTrace/>
+                <pattern>
+                    <pattern>
+                        {
+                            "service_name": "admin-module",
+                            "service_port": "8080",
+                            "environment": "production",
+                            "cluster": "metalinkr",
+                            "log_category": "application",
+                            "alert_level": "high",
+                            "requires_attention": "true",
+                            "thread_name": "%thread",
+                            "class_name": "%class{36}",
+                            "method_name": "%method",
+                            "line_number": "%line"
+                        }
+                    </pattern>
+                </pattern>
+            </providers>
         </encoder>
     </appender>
-    
-    <!-- Kafka日志Appender -->
-    <appender name="KAFKA" class="com.aleks.linkrmix.admin.common.config.DatabaseAppender"/>
     
     <!-- 应用日志级别 -->
     <logger name="com.aleks.linkrmix.admin" level="DEBUG" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
         <appender-ref ref="ERROR_FILE"/>
-        <appender-ref ref="KAFKA"/>
     </logger>
     
     <!-- Spring框架日志 -->

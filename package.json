@@ -4,16 +4,16 @@
   "description": "MetaLinkr 全栈项目",
   "scripts": {
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
-    "dev:frontend": "cd linkr-client/linkr-dashboard && npm run dev",
+    "dev:frontend": "cd linkr-client/pwa-front && npm run dev",
     "dev:backend": "cd linkr-server && mvn spring-boot:run",
     "build": "npm run build:frontend && npm run build:backend",
-    "build:frontend": "cd linkr-client/linkr-dashboard && npm run build",
+    "build:frontend": "cd linkr-client/pwa-front && npm run build",
     "build:backend": "cd linkr-server && mvn clean package -DskipTests",
     "start": "concurrently \"npm run start:frontend\" \"npm run start:backend\"",
-    "start:frontend": "cd linkr-client/linkr-dashboard && npm run preview",
+    "start:frontend": "cd linkr-client/pwa-front && npm run preview",
     "start:backend": "cd linkr-server && java -jar admin-module/target/admin-module-1.0-SNAPSHOT.jar",
-    "install:all": "npm install && cd linkr-client/linkr-dashboard && npm install",
-    "clean": "cd linkr-client/linkr-dashboard && rm -rf dist && cd linkr-server && mvn clean",
+    "install:all": "npm install && cd linkr-client/pwa-front && npm install",
+    "clean": "cd linkr-client/pwa-front && rm -rf dist && cd linkr-server && mvn clean",
     "deploy:local": "npm run build && npm run start"
   },
   "devDependencies": {

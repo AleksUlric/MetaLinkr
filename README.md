@@ -7,20 +7,19 @@ MetaLinkr 是一个全栈管理系统平台，采用前后端分离架构，支�
 ### 🌟 核心特性
 - 📊 **多端支持**: PC端管理后台、移动端、微信小程序、H5端
 - 🔧 **微服务架构**: 基于Spring Boot + Nacos的微服务架构
-- 📝 **日志管理**: 完整的日志收集、存储、查询和分析功能
 - 🚀 **一键部署**: 提供完整的批处理脚本，支持一键启动和停止
 - 🔒 **安全认证**: 基于Spring Security的安全认证机制
 - 🛡️ **统一错误处理**: 完整的错误码定义、异常处理和响应格式
+- 📈 **日志纳管**: 基于 ELK Stack 的集中化日志收集、处理和分析系统
 
 ## 📚 模块文档
 
 - [Admin-Module](./linkr-server/admin-module/admin-module.md) - 管理员微服务模块
-- [Log-Module](./linkr-server/log-module/log-module.md) - 日志管理微服务模块
-- [Log-Module API](./linkr-server/log-module/log-module-api.md) - 日志模块API接口
-- [Admin-Front](./linkr-client/linkr-dashboard/admin-front.md) - 管理员前端应用
-- [Log-Front](./linkr-client/linkr-log/log-front.md) - 日志管理前端应用
+- [Admin-Front](./linkr-client/admin-front/admin-front.md) - 管理员前端应用
 - [Nacos-Server](./nacos-server/nacos-server.md) - 服务注册与配置中心
 - [Common-Module](./linkr-server/common-module/common-module.md) - 统一错误处理系统
+- [ELK 日志纳管系统](./elk-log-management-design.md) - 基于 ELK Stack 的日志管理方案
+- [ELK 部署指南](./elk-deployment-guide.md) - ELK 系统部署和运维指南
 
 ## 🏗️ 项目结构
 
@@ -57,17 +56,9 @@ MetaLinkr/
 │   │   │               └── impl/      # 接口实现
 │   │   ├── src/main/resources/    # 配置文件
 │   │   └── pom.xml               # Maven配置
-│   ├── log-module/            # 日志管理微服务模块
-│   │   ├── src/main/java/     # 日志模块源代码
-│   │   ├── src/main/resources/    # 日志模块配置
-│   │   └── pom.xml               # 日志模块Maven配置
 │   └── pom.xml                   # 父级Maven配置
 ├── linkr-client/              # 前端客户端
-│   ├── linkr-dashboard/       # PC端管理后台
-│   │   ├── src/              # Vue源代码
-│   │   ├── dist/             # 构建输出
-│   │   └── package.json      # 前端依赖配置
-│   └── linkr-log/            # 日志管理前端
+│   └── admin-front/           # PC端管理后台
 │       ├── src/              # Vue源代码
 │       ├── dist/             # 构建输出
 │       └── package.json      # 前端依赖配置
@@ -81,9 +72,7 @@ MetaLinkr/
 ├── scripts/                  # 批处理脚本目录
 │   ├── start-all.bat         # 一键启动所有服务
 │   ├── start-admin-module.bat # 管理员模块启动脚本
-│   ├── start-log-module.bat  # 日志模块启动脚本
 │   ├── start-admin-front.bat # 管理员前端启动脚本
-│   ├── start-log-front.bat   # 日志前端启动脚本
 │   ├── start-mysql.bat       # MySQL服务管理脚本
 │   ├── start-nacos.bat       # Nacos服务管理脚本
 │   ├── check-status.bat      # 服务状态检查脚本
@@ -100,6 +89,8 @@ MetaLinkr/
 - Maven 3.6+
 - MySQL 8.0+
 - Node.js 16+
+- Docker 20.10+ (用于 ELK 日志纳管系统)
+- Docker Compose 2.0+ (用于 ELK 日志纳管系统)
 
 ### 脚本编码优化
 项目中的批处理脚本已进行编码优化，解决Windows命令行中的乱码问题：
@@ -187,11 +178,16 @@ MetaLinkr/
 # 启动所有服务
 start-all.bat
 
+# 启动 ELK 日志纳管系统
+start-elk.bat
+
 # 检查服务状态
 check-status.bat
+check-elk-status.bat
 
 # 停止所有服务
 stop-all.bat
+stop-elk.bat
 ```
 
 ### 分别启动
@@ -206,13 +202,6 @@ start-admin-module.bat
 
 # 启动Admin前端服务
 start-admin-front.bat
-
-# 启动Log后端服务
-start-log-module.bat
-
-# 启动Log前端服务
-start-log-front.bat
-
 ```
 
 **手动启动：**
@@ -246,7 +235,7 @@ mvn spring-boot:run
 
 **3. 启动前端服务：**
 ```bash
-cd linkr-client/linkr-dashboard
+cd linkr-client/admin-front
 npm install
 npm run dev
 ```
@@ -257,8 +246,66 @@ npm run dev
 - **Nacos控制台**: http://localhost:8848/nacos (账号: nacos, 密码: nacos)
 - **Admin后端API**: http://localhost:8080
 - **健康检查**: http://localhost:8080/actuator/health
-- **Dashboard前端**: http://localhost:5173
-- **Log前端**: http://localhost:5174
+- **Admin前端**: http://localhost:5173
+
+### ELK 日志纳管系统访问地址
+- **Kibana 可视化界面**: http://localhost:5601
+- **Elasticsearch API**: http://localhost:9200
+- **Logstash 监控**: http://localhost:9600 (完整配置)
+- **Nginx 测试页面**: http://localhost:80
+- **ES Head 管理工具**: http://localhost:9100
+
+### ELK 配置选择
+项目提供三种ELK配置：
+
+#### 1. 完整配置 (推荐)
+- **内存使用**: 约1.2GB
+- **镜像大小**: 约1.6GB
+- **功能**: 完整的日志收集、处理、存储、分析功能
+- **启动**: `scripts\start-elk.bat`
+- **适用**: 生产环境、功能要求高的场景
+
+#### 2. 超轻量配置 (内存受限环境)
+- **内存使用**: 约208MB (节省944MB)
+- **镜像大小**: 约1.6GB
+- **功能**: 基础日志收集、存储、查询功能
+- **启动**: `scripts\start-elk-ultra-minimal.bat`
+- **特点**: 去掉Logstash，Filebeat直接输出到Elasticsearch
+- **适用**: 开发环境、内存受限的环境
+- **详细说明**: [ELK超轻量配置优化说明](./elk-config/elk-ultra-minimal-optimization.md)
+
+#### 3. 微镜像配置 (极低资源环境)
+- **内存使用**: 约104MB (节省1048MB)
+- **镜像大小**: 约400MB (节省1200MB)
+- **功能**: 基础日志收集、存储、查询功能
+- **启动**: `scripts\start-elk-micro-minimal.bat`
+- **特点**: 使用Alpine镜像，去掉Logstash，极简配置
+- **适用**: 极低内存和存储环境
+- **详细说明**: [Docker镜像优化说明](./elk-config/docker-image-optimization.md)
+
+### Nacos 配置选择
+项目提供三种Nacos配置：
+
+#### 1. 标准配置 (推荐)
+- **内存使用**: 约1GB+
+- **功能**: 完整的服务注册、配置管理、集群支持
+- **启动**: `scripts\start-nacos.bat`
+- **适用**: 生产环境、功能要求高的场景
+
+#### 2. 轻量化配置 (内存受限环境)
+- **内存使用**: 约512MB (节省50%)
+- **功能**: 基础服务注册、配置管理功能
+- **启动**: `scripts\start-nacos-minimal.bat`
+- **特点**: 通过JVM参数优化减少内存占用
+- **适用**: 开发环境、内存受限的环境
+
+#### 3. 超轻量化配置 (极低资源环境)
+- **内存使用**: 约512MB (节省75%)
+- **功能**: 基础服务注册、配置管理功能
+- **启动**: `scripts\start-nacos-ultra-minimal.bat`
+- **特点**: 使用内置MySQL，JVM参数极简优化
+- **适用**: 极低内存环境
+- **详细说明**: [Nacos轻量化配置总结](./nacos-optimization-summary.md)
 
 ### 服务状态检查
 ```bash
@@ -269,13 +316,11 @@ check-status.bat
 netstat -ano | findstr :8080  # 检查后端服务
 netstat -ano | findstr :5173  # 检查前端服务
 netstat -ano | findstr :8848  # 检查Nacos服务
-netstat -ano | findstr :9092  # 检查Kafka服务
 ```
 
 ## 📱 多端支持
 
-- **PC端管理后台** (`linkr-dashboard`) - Vue3 + Element Plus
-- **日志管理前端** (`linkr-log`) - Vue3 + Element Plus
+- **PC端管理后台** (`admin-front`) - Vue3 + Element Plus
 - **移动端** (计划中) - React Native / Flutter
 - **微信小程序** (计划中) - 原生小程序
 - **H5端** (计划中) - Vue3 + Vant
@@ -311,39 +356,13 @@ netstat -ano | findstr :9092  # 检查Kafka服务
 - **端口**: 8080
 - **技术栈**: Spring Boot + Spring Security + MyBatis Plus
 
-### Log-Module (日志模块)
-- **功能**: 日志收集、存储、查询、分析
-- **端口**: 8081
-- **技术栈**: Spring Boot + MyBatis Plus + Logback + Kafka + WebSocket
-- **详细文档**: [日志模块文档](./linkr-server/log-module/log-module.md)
 
-## 🔄 日志系统架构
-
-### 当前实现方案 (v1.4.2)
-- **存储**: MySQL + Kafka
-- **实时推送**: WebSocket
-- **日志收集**: 通过Kafka消息队列实现异步解耦
-
-### 未来扩展方案 (v1.5.0+)
-- **存储**: MySQL + Elasticsearch (ES)
-- **搜索分析**: ES提供强大的全文搜索和聚合分析能力
-- **混合存储策略**: 
-  - MySQL: 最近30天日志，保证事务性
-  - ES: 历史日志，提供搜索分析功能
-
-### ES优势说明
-- **不是传统数据库**: ES是分布式搜索引擎，专门为日志分析设计
-- **核心特性**: 全文搜索、实时分析、水平扩展、聚合统计
-- **适用场景**: 日志搜索、性能分析、业务统计、告警监控
-- **与MySQL对比**: 
-  - MySQL: 事务处理、结构化查询、数据一致性
-  - ES: 全文搜索、大数据分析、实时聚合
 
 ### Admin-Front (管理员前端)
 - **功能**: PC端管理界面
 - **端口**: 5173
 - **技术栈**: Vue 3 + TypeScript + Element Plus
-- **详细文档**: [Admin-Front文档](./linkr-client/linkr-dashboard/admin-front.md)
+- **详细文档**: [Admin-Front文档](./linkr-client/admin-front/admin-front.md)
 
 ### Nacos (服务注册中心)
 - **功能**: 服务注册、配置管理
@@ -366,12 +385,9 @@ start-all.bat restart  # 重启所有服务
 ```
 
 **启动顺序**:
-1. Kafka服务 (等待15秒)
-2. Nacos服务 (等待15秒)
-3. Admin后端服务 (等待10秒)
-4. Log后端服务 (等待10秒)
-5. Admin前端服务 (等待5秒)
-6. Log前端服务 (等待5秒)
+1. Nacos服务 (等待15秒)
+2. Admin后端服务 (等待10秒)
+3. Admin前端服务 (等待5秒)
 
 #### 2. stop-all.bat - 停止所有服务
 **功能**: 停止所有运行中的服务
@@ -401,21 +417,7 @@ start-admin-module.bat
 start-admin-front.bat
 ```
 
-#### 6. start-log-module.bat - 单独启动Log后端
-**功能**: 仅启动Log后端服务
-**用法**: 
-```bash
-start-log-module.bat
-```
-
-#### 7. start-log-front.bat - 单独启动Log前端
-**功能**: 仅启动Log前端服务
-**用法**: 
-```bash
-start-log-front.bat
-```
-
-#### 8. check-status.bat - 服务状态检查
+#### 6. check-status.bat - 服务状态检查
 **功能**: 检查所有服务的运行状态和端口占用情况
 **用法**: 
 ```bash
@@ -424,171 +426,18 @@ check-status.bat
 
 ### 使用建议
 1. **首次使用**: 运行 `start-all.bat` 启动所有服务
-2. **日常开发**: 可以使用 `start-admin-front.bat` 或 `start-log-front.bat` 单独启动前端进行开发
+2. **日常开发**: 可以使用 `start-admin-front.bat` 单独启动前端进行开发
 3. **服务异常**: 使用 `check-status.bat` 检查服务状态
 4. **重启服务**: 使用 `restart-all.bat` 或 `start-all.bat restart`
 5. **停止服务**: 使用 `start-all.bat stop` 或 `stop-all.bat`
 
 ## 📝 开发规范
 
-### 日志配置规范
-
-#### 概述
-MetaLinkr 项目采用统一的日志配置规范，确保所有后端服务的日志格式一致性和可读性。
-
-#### 日志格式
-
-**控制台输出格式：**
-```
-时间戳 [线程名] 日志级别 类名 : 消息内容
-```
-
-**示例：**
-```
-10:30:15.123 [main]      ℹ️ INFO     [main        ] controller.AuthController     : ✅ admin-module服务注册成功
-10:30:15.456 [main]      🔍 DEBUG    [main        ] service.AuthServiceImpl       : 用户登录验证开始
-10:30:15.789 [main]      ❌ ERROR    [main        ] config.GlobalExceptionHandler : 数据库连接失败
-```
-
-**文件输出格式：**
-```
-2024-01-15 10:30:15.123 [main] INFO  com.aleks.linkrmix.admin.controller.AuthController - 用户登录成功
-```
-
-#### 日志级别
-- **ERROR**: ❌ 红色 - 系统错误，需要立即关注
-- **WARN**: ⚠️ 黄色 - 警告信息，可能的问题
-- **INFO**: ℹ️ 绿色 - 重要业务信息
-- **DEBUG**: 🔍 蓝色 - 调试信息，开发时使用
-- **TRACE**: 🔎 紫色 - 最详细的调试信息
-
-#### 服务日志配置
-
-**1. Admin Module (admin-module)**
-- **端口**: 8080
-- **日志文件**: `logs/admin-module.log`
-- **错误日志**: `logs/admin-module-error.log`
-- **日志级别**: DEBUG (应用), INFO (框架), WARN (MyBatis/HikariCP)
-
-**2. Log Module (log-module)**
-- **端口**: 8081
-- **日志文件**: `logs/log-module.log`
-- **错误日志**: `logs/log-module-error.log`
-- **日志级别**: DEBUG (应用), INFO (框架), WARN (MyBatis/HikariCP)
-- **特殊功能**: 数据库日志存储
-
-**3. Nacos Server**
-- **端口**: 8848
-- **日志文件**: `logs/nacos.log`
-- **错误日志**: `logs/nacos-error.log`
-- **日志级别**: INFO (根级别), WARN (核心组件)
-- **配置**: 使用官方默认日志配置
-
-#### 日志轮转策略
-- **文件大小限制**: 100MB
-- **保留天数**: 30天
-- **文件命名**: `服务名.日期.序号.log`
-
-#### 特殊功能
-
-**1. 彩色控制台输出**
-每个服务都配置了自定义的 `ColoredConsoleAppender`，提供：
-- 彩色日志级别显示和图标标识
-- 优化的时间戳格式
-- 简化的类名显示（只显示最后两部分）
-- 对齐的线程名和类名
-- 简洁的异常堆栈显示（最多3行）
-
-**2. 数据库框架日志优化**
-为了减少冗余的SQL调试信息，对以下框架的日志级别进行了优化：
-- **MyBatis**: 设置为WARN级别，减少SQL执行日志
-- **MyBatis-Plus**: 设置为WARN级别，减少初始化日志
-- **HikariCP**: 设置为WARN级别，减少连接池管理日志
-
-**3. 集中化日志收集系统**
-项目实现了完整的日志收集功能，支持所有服务的日志统一管理：
-
-**Admin Module 日志收集**
-- 配置 `DatabaseAppender`，自动收集应用日志
-- 支持实时日志监控和存储
-- 可通过Log前端界面查看收集的日志
-
-**Nacos Server 日志收集**
-- 使用官方默认日志配置，保持稳定性
-- 支持本地文件日志存储
-- 可通过Log前端界面查看日志
-
-**Log Module 日志收集**
-- 配置 `DatabaseAppender`，将日志自动存储到数据库
-- 支持日志查询和分析
-- 支持日志搜索和过滤
-- 支持日志统计和监控
-
-
-
-#### 启动日志示例
-
-**Admin Module 启动日志：**
-```
-==========================================
-🚀 Admin服务启动完成 - MetaLinkr项目
-==========================================
-服务名称: admin-module
-服务端口: 8080
-启动时间: 2024-01-15T10:30:00
-健康检查: http://localhost:8080/actuator/health
-Nacos控制台: http://localhost:8848/nacos
-==========================================
-✅ admin-module服务注册成功
-   实例地址: 192.168.1.100:8080
-==========================================
-```
-
-**Log Module 启动日志：**
-```
-==========================================
-🚀 Log服务启动完成 - MetaLinkr项目
-==========================================
-服务名称: log-module
-服务端口: 8081
-启动时间: 2024-01-15T10:30:00
-健康检查: http://localhost:8081/actuator/health
-Nacos控制台: http://localhost:8848/nacos
-==========================================
-✅ log-module服务注册成功
-   实例地址: 192.168.1.100:8081
-==========================================
-```
-
-#### 配置位置
-- **Admin Module**: `linkr-server/admin-module/src/main/resources/logback-spring.xml`
-- **Log Module**: `linkr-server/log-module/src/main/resources/logback-spring.xml`
-- **Nacos Server**: `nacos-server/conf/nacos-logback.xml`
-
-#### 最佳实践
-1. **日志内容规范**
-   - 使用占位符而不是字符串拼接
-   - 避免记录敏感信息
-   - 提供有意义的日志消息
-
-2. **日志级别使用**
-   - ERROR: 系统错误和异常
-   - WARN: 潜在问题和警告
-   - INFO: 重要业务操作
-   - DEBUG: 调试信息
-   - TRACE: 详细调试信息
-
-3. **性能考虑**
-   - 避免在日志中执行复杂操作
-   - 合理设置日志级别
-   - 使用异步日志处理
-
 ### 项目结构规范
 
 #### 模块划分
 - **common-module**: 公共模块，包含工具类、通用组件等
 - **admin-module**: 管理员模块，包含用户管理、权限管理等功能
-- **log-module**: 日志模块，包含日志收集、查询、分析等功能
 
 #### 包结构规范
 每个模块应遵循以下包结构：
@@ -677,11 +526,6 @@ public class LogEntryManager {
 ##### admin-module
 - `AdminUserManager.java` - 管理 `admin_users` 表
 
-##### log-module
-- `LogEntryManager.java` - 管理 `log_entry` 表
-- `ServiceInfoManager.java` - 管理 `service_info` 表
-- `AlertRuleManager.java` - 管理 `alert_rule` 表
-
 #### 6. 开发建议
 - 保持Manager类职责单一，专注于对应表的业务逻辑
 - 复杂业务逻辑可以组合多个Manager类
@@ -738,50 +582,32 @@ public class LogEntryManager {
 
 ## 🔄 版本历史
 
-### v1.4.2 (当前版本)
-- ✅ 实现MySQL + Kafka + WebSocket的实时日志系统
-- ✅ admin-module作为日志生产者，通过Kafka发送日志消息
-- ✅ log-module作为日志消费者，从Kafka消费日志并实时推送到前端
-- ✅ 集成实时日志查看页面到log前端模块
-- ✅ 优化依赖注入规范，统一使用@Resource注解
-- ✅ 创建测试Controller验证日志发送功能
-
-### v1.4.1
-- ✅ 为admin-module添加日志收集功能
-- ✅ admin-module配置DatabaseAppender，支持日志自动收集
-- ✅ nacos-server恢复官方默认日志配置，保持稳定性
-- ✅ 统一所有服务的日志收集标准，实现集中化日志管理
-
-### v1.4.0
-- ✅ 统一所有服务的日志配置格式，包括log-module、admin-module和nacos-server
-- ✅ 优化日志输出，减少重复的启动信息和MyBatis调试日志
-- ✅ 简化服务启动流程，删除重复的配置类和监听器
-- ✅ 统一数据库连接检查逻辑，连接失败时直接终止应用启动
-- ✅ 整合日志配置规范到根目录README.md，删除单独的LOGGING_CONFIG.md
-- ✅ 优化Nacos服务日志配置，简化日志文件结构，减少冗余输出
-- ✅ 统一所有服务的日志格式和级别设置，提高日志可读性
+### v2.0.0 (当前版本)
+- ✅ 清理所有日志收集处理功能，为后续新架构做准备
+- ✅ 移除log-module模块及相关代码
+- ✅ 移除Kafka相关配置和依赖
+- ✅ 移除日志前端应用
+- ✅ 更新项目文档和脚本
+- ✅ 优化项目结构，专注于核心管理功能
 
 ### v1.3.0
 - ✅ 新增统一错误处理系统，包含错误码定义、异常处理、响应格式
 - ✅ 创建Common-Module公共模块，提供全局异常处理器和工具类
-- ✅ 完善错误码分类，按功能模块划分（通用、认证、日志、服务、数据库等）
-- ✅ 优化前端日志搜索界面，支持中文时间控件和紧凑布局
+- ✅ 完善错误码分类，按功能模块划分（通用、认证、服务、数据库等）
 - ✅ 重构数据传输对象规范，明确DTO和VO的使用场景
-- ✅ 更新Log模块返回类型，统一使用VO返回给前端
 - ✅ 优化分页返回逻辑，使用PageUtils工具类简化代码
 - ✅ 完善项目开发规范，明确Controller接收DTO返回VO的规范
 
 ### v1.1.0
-- ✅ 重构Log模块包结构，将Entity和DTO移动到model包下
 - ✅ 更新项目开发规范，明确数据模型必须放在model包下
 - ✅ 统一所有模块的包结构规范，确保项目架构一致性
-- ✅ 优化Log模块架构，符合项目整体规范
+- ✅ 优化模块架构，符合项目整体规范
 
 ### v1.0.9
 - ✅ 全面优化Manager层架构，移除接口+实现模式
 - ✅ 简化包结构，Manager层直接实现无需impl子包
 - ✅ 统一Manager层设计，提高代码简洁性和可维护性
-- ✅ 完成Log模块和Admin模块的Manager层优化
+- ✅ 完成Admin模块的Manager层优化
 
 ### v1.0.8
 - ✅ 优化Manager层参数传递，直接接收DTO参数使用Wrapper
@@ -824,15 +650,12 @@ public class LogEntryManager {
 
 ### v1.0.2
 - ✅ 整合项目文档，将所有MD文件内容合并到主README.md
-- ✅ 完善日志管理模块的前端界面和功能
-- ✅ 新增日志搜索、告警配置、服务管理等功能
-- ✅ 优化批处理脚本，新增日志模块启动脚本
+- ✅ 优化批处理脚本，完善服务启动脚本
 
 ### v1.0.1
 - ✅ 优化项目结构，将config包移至common包下
 - ✅ 修复Bean冲突问题，确保服务正常启动
 - ✅ 完善批处理脚本，支持一键启动和状态检查
-- ✅ 集成日志管理模块
 
 ### v1.0.0
 - ✅ 完成项目重构，采用前后端分离架构
@@ -847,10 +670,7 @@ public class LogEntryManager {
 3. 如果端口被占用，请先停止相关服务
 4. 建议在管理员权限下运行脚本
 5. 服务启动有一定延迟，请耐心等待
-6. 日志数据量可能很大，建议定期清理历史数据
-7. 告警规则的条件表达式需要仔细设计，避免误报
-8. 生产环境建议配置日志轮转和归档策略
-9. 敏感信息不应该记录在日志中
+
 
 ## 🔧 故障排除
 

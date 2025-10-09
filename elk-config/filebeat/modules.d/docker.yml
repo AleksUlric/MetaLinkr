@@ -1,0 +1,17 @@
+# Docker module configuration
+- module: docker
+  enabled: true
+  
+  # Container logs
+  containers:
+    enabled: true
+    var.paths:
+      - "/var/lib/docker/containers/*/*.log"
+    var.parsers:
+      - container
+      - cri
+    var.include_labels:
+      - "com.docker.compose.service"
+      - "com.docker.compose.project"
+      - "com.docker.compose.version"
+      - "com.docker.stack.namespace"

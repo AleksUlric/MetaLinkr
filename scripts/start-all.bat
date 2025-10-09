@@ -74,21 +74,6 @@ if %errorlevel% equ 0 (
     echo ✅ 端口8080可用
 )
 
-:: 检查端口8081 (Log后端)
-echo 检查端口8081 (Log后端)...
-netstat -ano | findstr :8081 >nul
-if %errorlevel% equ 0 (
-    echo ⚠️  端口8081已被占用，正在强制释放...
-    for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8081') do (
-        echo 正在终止进程ID: %%a
-        taskkill /f /pid %%a 2>nul
-    )
-    echo 等待2秒让端口完全释放...
-    timeout /t 2 /nobreak >nul
-) else (
-    echo ✅ 端口8081可用
-)
-
 :: 检查端口5173 (Admin前端)
 echo 检查端口5173 (Admin前端)...
 netstat -ano | findstr :5173 >nul
@@ -104,56 +89,23 @@ if %errorlevel% equ 0 (
     echo ✅ 端口5173可用
 )
 
-:: 检查端口5174 (Log前端)
-echo 检查端口5174 (Log前端)...
-netstat -ano | findstr :5174 >nul
-if %errorlevel% equ 0 (
-    echo ⚠️  端口5174已被占用，正在强制释放...
-    for /f "tokens=5" %%a in ('netstat -ano ^| findstr :5174') do (
-        echo 正在终止进程ID: %%a
-        taskkill /f /pid %%a 2>nul
-    )
-    echo 等待2秒让端口完全释放...
-    timeout /t 2 /nobreak >nul
-) else (
-    echo ✅ 端口5174可用
-)
-
 echo.
-echo 1. 启动Kafka服务...
-call "%~dp0start-kafka.bat"
-echo Kafka启动中，等待15秒...
-timeout /t 15 /nobreak >nul
-
-echo.
-echo 2. 启动Nacos服务...
+echo 1. 启动Nacos服务...
 cd /d "%~dp0..\nacos-server\bin"
 start /b "Nacos服务" cmd /c "startup.cmd -m standalone > ..\logs\nacos-startup.log 2>&1"
 echo Nacos启动中，等待15秒...
 timeout /t 15 /nobreak >nul
 
 echo.
-echo 3. 启动Admin后端服务...
+echo 2. 启动Admin后端服务...
 call "%~dp0start-admin-module.bat"
 echo Admin后端启动中，等待10秒...
 timeout /t 10 /nobreak >nul
 
 echo.
-echo 4. 启动Log后端服务...
-call "%~dp0start-log-module.bat"
-echo Log后端启动中，等待10秒...
-timeout /t 10 /nobreak >nul
-
-echo.
-echo 5. 启动Admin前端服务...
+echo 3. 启动Admin前端服务...
 call "%~dp0start-admin-front.bat"
 echo Admin前端启动中，等待5秒...
-timeout /t 5 /nobreak >nul
-
-echo.
-echo 6. 启动Log前端服务...
-call "%~dp0start-log-front.bat"
-echo Log前端启动中，等待5秒...
 timeout /t 5 /nobreak >nul
 
 
@@ -161,22 +113,16 @@ echo.
 echo ========================================
 echo 所有服务启动完成！
 echo ========================================
-echo Kafka服务: localhost:9092 (KRaft模式)
 echo Nacos控制台: http://localhost:8848/nacos (nacos/nacos)
 echo 后端API: http://localhost:8080
-echo Log后端API: http://localhost:8081
 echo Admin前端: http://localhost:5173
-echo Log前端: http://localhost:5174
 echo 健康检查: http://localhost:8080/actuator/health
 echo ========================================
 echo.
 echo 服务说明:
-echo   Kafka服务: 消息队列服务 (localhost:9092, KRaft模式)
 echo   Nacos服务: 服务注册与配置中心
 echo   后端服务: 管理后台API (admin-module)
-echo   Log后端: 日志管理API (log-module)
 echo   Admin前端: 管理后台界面
-echo   Log前端: 日志管理界面
 echo.
 echo 使用方法:
 echo   start-all.bat        - 启动所有服务

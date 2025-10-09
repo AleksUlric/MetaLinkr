@@ -1,0 +1,16 @@
+# System module configuration
+- module: system
+  # Syslog
+  syslog:
+    enabled: false
+    var.paths: ["/var/log/host/syslog*"]
+
+  # Authorization logs
+  auth:
+    enabled: false
+    var.paths: ["/var/log/host/auth.log*"]
+
+  # SSH logs
+  ssh:
+    enabled: false
+    var.paths: ["/var/log/host/auth.log*"]

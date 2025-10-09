@@ -19,7 +19,6 @@
     <modules>
         <module>common-module</module>
         <module>admin-module</module>
-        <module>log-module</module>
     </modules>
 
     <properties>
@@ -70,6 +69,15 @@
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+            
+            <!-- Spring Boot Maven Plugin -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.aleks.linkrmix.admin.AdminModuleApplication</mainClass>
                 </configuration>
             </plugin>
         </plugins>

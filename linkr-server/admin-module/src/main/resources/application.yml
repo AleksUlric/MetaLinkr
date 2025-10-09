@@ -83,22 +83,6 @@ spring:
         import-check:
           enabled: false
 
-  # Kafka配置
-  kafka:
-    bootstrap-servers: localhost:9092
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      acks: all
-      retries: 3
-      batch-size: 16384
-      linger-ms: 1
-      buffer-memory: 33554432
-
-# Kafka主题配置
-kafka:
-  topic:
-    log: admin-logs
 
 # Spring Security开关配置
 security:
@@ -127,14 +111,17 @@ management:
       prometheus:
         enabled: true
 
-# 日志配置
+# 日志配置 - ELK集成优化
 logging:
   level:
     com.aleks.linkrmix: DEBUG
-    org.springframework.kafka: INFO
-    org.apache.kafka: WARN
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.apache.ibatis: WARN
+    com.zaxxer.hikari: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  config: classpath:logback-spring.xml
 
 # MyBatis-Plus配置
 mybatis-plus:
