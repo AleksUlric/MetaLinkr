@@ -18,14 +18,15 @@
   - 安全性较低
 
 ### 服务配置
-- **Nacos版本**: `nacos/nacos-server:latest`
+- **Nacos版本**: `nacos/nacos-server:v2.2.3`
+- **Redis版本**: `redis:8.0-alpine`
 - **运行模式**: `standalone` (单机模式)
 - **数据库**: 本地MySQL服务 (127.0.0.1:3306)
 - **认证状态**: **已禁用** (开发环境)
 
 ## 🔧 当前配置文件
 
-### 1. docker-compose.yml
+### 1. docker-compose.yml (主配置)
 ```yaml
 services:
   nacos:
@@ -47,7 +48,41 @@ services:
     restart: unless-stopped
 ```
 
-### 2. nacos/conf/application.properties
+### 2. redis/docker-compose.yml (Redis配置)
+```yaml
+version: '3.8'
+
+services:
+  redis:
+    image: redis:8.0-alpine
+    container_name: redis-pwa
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass ""
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+
+volumes:
+  redis-data:
+    driver: local
+```
+
+### 3. nacos/conf/application.properties
 ```properties
 # 认证配置 - 已禁用
 nacos.core.auth.enabled=false
@@ -59,7 +94,7 @@ db.user=root
 db.password=Xing@1225
 ```
 
-### 3. mysql/init/nacos-mysql.sql
+### 4. mysql/init/nacos-mysql.sql
 - 包含完整的Nacos数据库表结构
 - 预置nacos管理员账户 (nacos/nacos)
 - 支持多租户和配置管理
@@ -90,6 +125,12 @@ db.password=Xing@1225
 - **影响**: 如果宿主机已占用8848端口，容器无法启动
 - **建议**: 后续使用端口映射
 
+### 5. Redis配置问题
+- **当前状态**: Redis独立配置，未集成到主配置
+- **风险等级**: 🟢 低风险
+- **影响**: 需要分别启动Nacos和Redis服务
+- **建议**: 后续整合到统一的docker-compose.yml中
+
 ## 📊 配置对比表
 
 | 配置项 | 当前状态 | 目标状态 | 优先级 |
@@ -97,6 +138,7 @@ db.password=Xing@1225
 | 网络模式 | host | bridge | 🟡 中 |
 | 认证状态 | 禁用 | 启用 | 🔴 高 |
 | 数据库 | 本地MySQL | 容器化MySQL | 🟡 中 |
+| Redis服务 | 独立配置 | 集成配置 | 🟢 低 |
 | 端口管理 | 直接使用 | 端口映射 | 🟡 中 |
 | 资源限制 | 无 | 有 | 🟢 低 |
 | 健康检查 | 无 | 有 | 🟢 低 |
@@ -250,6 +292,26 @@ scripts\stop-nacos.bat
 
 # 检查服务状态
 scripts\check-nacos.bat
+```
+
+### Redis服务启动
+```bash
+# 进入Redis配置目录
+cd docker-config/redis
+
+# 启动Redis服务
+docker-compose up -d
+
+# 或者使用批处理脚本
+start-redis.bat
+
+# 停止Redis服务
+docker-compose down
+# 或者使用批处理脚本
+stop-redis.bat
+
+# 检查Redis状态
+docker exec -it redis-pwa redis-cli ping
 ```
 
 ### 停止服务

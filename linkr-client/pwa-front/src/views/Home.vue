@@ -33,7 +33,7 @@
         </div>
         <div class="feature-item soul-match" @click="startSoulMatch">
           <div class="feature-icon">💫</div>
-          <span>灵魂匹配</span>
+          <span>灵犀链接</span>
         </div>
         <div class="feature-item soul-voice" @click="joinVoiceRoom">
           <div class="feature-icon">🎵</div>
@@ -316,7 +316,7 @@ const createMoment = () => {
 
 const startSoulMatch = () => {
   router.push('/match')
-  ElMessage.success('开始灵魂匹配')
+  ElMessage.success('开始灵犀链接')
 }
 
 const joinVoiceRoom = () => {

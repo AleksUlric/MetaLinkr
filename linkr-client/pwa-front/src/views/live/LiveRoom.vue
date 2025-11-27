@@ -53,7 +53,7 @@
       <div class="live-controls">
         <el-button 
           type="danger"
-          :icon="Heart"
+          :icon="Star"
           circle
           size="large"
           @click="likeStreamer"
@@ -67,10 +67,10 @@
         />
         <el-button 
           type="success"
-          :icon="Gift"
+          :icon="Present"
           circle
           size="large"
-          @click="sendGift"
+          @click="sendPresent"
         />
       </div>
     </div>
@@ -80,7 +80,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { VideoCamera, Heart, Share, Gift } from '@element-plus/icons-vue'
+import { VideoCamera, Star, Share, Present } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -138,7 +138,7 @@ const shareLive = () => {
   console.log('分享直播')
 }
 
-const sendGift = () => {
+const sendPresent = () => {
   console.log('发送礼物')
 }
 </script>

@@ -51,3 +51,18 @@ declare module '@/mock/user' {
   export const mockUserProfile: any
 }
 
+declare module '@/components/*.vue' {
+  import type { DefineComponent } from 'vue'
+  const component: DefineComponent<{}, {}, any>
+  export default component
+}
+
+declare module '@/utils/avatar' {
+  export function getDefaultAvatarUrl(gender?: string): string
+  export function getUserAvatarUrl(avatar?: string, gender?: string): string
+  export function fetchDefaultAvatarUrl(gender?: string): Promise<string>
+  export function preloadDefaultAvatars(): Promise<void>
+  export function getLocalDefaultAvatarUrl(gender?: string): string
+  export function isDefaultAvatar(avatarUrl: string): boolean
+}
+

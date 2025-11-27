@@ -65,19 +65,19 @@ if not exist "package.json" (
     exit /b 1
 )
 
-:: 检查端口3000是否被占用
-echo 检查端口3000是否被占用...
-netstat -ano | findstr :3000 >nul
+:: 检查端口5176是否被占用
+echo 检查端口5176是否被占用...
+netstat -ano | findstr :5176 >nul
 if %errorlevel% equ 0 (
-    echo ⚠️  端口3000已被占用，正在强制释放...
-    for /f "tokens=5" %%a in ('netstat -ano ^| findstr :3000') do (
+    echo ⚠️  端口5176已被占用，正在强制释放...
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr :5176 ^| findstr LISTENING') do (
         echo 正在终止进程ID: %%a
         taskkill /f /pid %%a 2>nul
     )
     echo 等待2秒让端口完全释放...
     timeout /t 2 /nobreak >nul
 ) else (
-    echo ✅ 端口3000可用
+    echo ✅ 端口5176可用
 )
 
 :: 安装依赖
@@ -93,19 +93,19 @@ echo ========================================
 echo 启动PWA前端服务...
 echo ========================================
 echo 服务名称: pwa-front
-echo 服务端口: 3000
+echo 服务端口: 5176
 echo 技术栈: Vue 3 + TypeScript + Element Plus + PWA
 echo ========================================
 echo 按 Ctrl+C 停止服务
 echo.
 
-start "PWA前端服务" cmd /k "npm run dev -- --port 3000"
+start "PWA前端服务" cmd /k "npm run dev"
 
 echo.
 echo ========================================
 echo PWA前端服务启动完成！
 echo ========================================
-echo 访问地址: http://localhost:3000
+echo 访问地址: http://localhost:5176
 echo ========================================
 echo.
 echo 使用方法:

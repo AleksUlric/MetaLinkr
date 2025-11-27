@@ -7,12 +7,16 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { preloadDefaultAvatars } from '@/utils/avatar'
 
 const routerReady = ref(false)
 
-onMounted(() => {
+onMounted(async () => {
   console.log('App component loaded')
+  // 预加载默认头像URL（从后端获取签名URL）
+  preloadDefaultAvatars().catch(err => {
+    console.error('预加载默认头像失败:', err)
+  })
   // 确保路由已经准备好
   routerReady.value = true
 })
@@ -64,7 +68,6 @@ button {
 
 input, textarea {
   outline: none;
-  border: none;
 }
 
 // 滚动条样式
@@ -104,48 +107,81 @@ input, textarea {
 }
 
 .el-input {
-  .el-input__inner {
+  .el-input__wrapper {
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
+    box-shadow: none;
     
-    &:focus {
-      border-color: #ff77c6;
+    .el-input__inner {
+      color: #ffffff;
+      background: transparent;
+      border: none;
+      
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+      }
     }
     
-    &::placeholder {
-      color: rgba(255, 255, 255, 0.6);
+    &:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    &.is-focus {
+      border-color: #ff77c6;
+      box-shadow: 0 0 0 2px rgba(255, 119, 198, 0.2);
     }
   }
 }
 
 .el-textarea {
-  .el-textarea__inner {
+  .el-textarea__wrapper {
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
+    box-shadow: none;
     
-    &:focus {
-      border-color: #ff77c6;
+    .el-textarea__inner {
+      color: #ffffff;
+      background: transparent;
+      border: none;
+      
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+      }
     }
     
-    &::placeholder {
-      color: rgba(255, 255, 255, 0.6);
+    &:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    &.is-focus {
+      border-color: #ff77c6;
+      box-shadow: 0 0 0 2px rgba(255, 119, 198, 0.2);
     }
   }
 }
 
 .el-select {
-  .el-input__inner {
+  .el-input__wrapper {
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
+    box-shadow: none;
     
-    &:focus {
+    .el-input__inner {
+      color: #ffffff;
+      background: transparent;
+      border: none;
+    }
+    
+    &:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    &.is-focus {
       border-color: #ff77c6;
+      box-shadow: 0 0 0 2px rgba(255, 119, 198, 0.2);
     }
   }
 }
@@ -224,36 +260,37 @@ input, textarea {
   }
 }
 
-// Soul风格全局深色主题 - 仅在非登录页面应用
+// 清新风格全局浅色主题 - 仅在非登录页面应用
 body:not(.login-page) {
-  background: #1a1a1a;
-  color: #ffffff;
+  background: linear-gradient(135deg, #faf7ff 0%, #f3f0ff 100%);
+  color: #334155;
 }
 
 .el-button {
   &.el-button--default {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(148, 163, 184, 0.3);
+    color: #475569;
     
     &:hover {
-      background: rgba(255, 255, 255, 0.2);
-      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.9);
+      border-color: rgba(148, 163, 184, 0.5);
+      color: #334155;
     }
   }
 }
 
 // 滚动条样式
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(148, 163, 184, 0.1);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(148, 163, 184, 0.3);
   border-radius: 6px;
   
   &:hover {
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(148, 163, 184, 0.5);
   }
 }
 

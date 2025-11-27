@@ -278,9 +278,9 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .soul-chat-page {
-  background: #ffffff;
+  background: linear-gradient(135deg, #faf7ff 0%, #f3f0ff 100%);
   min-height: 100vh;
-  color: #333333;
+  color: #334155;
   position: relative;
 }
 

@@ -4,7 +4,7 @@
     <div class="live-status-bar">
       <div class="status-info">
         <div class="user-avatar-container">
-          <el-avatar :src="userStore.profile?.avatar || 'https://picsum.photos/200/200?random=999'" :size="40" />
+          <el-avatar :src="userAvatarUrl" :size="40" />
           <div class="online-indicator"></div>
         </div>
         <div class="user-stats">
@@ -342,6 +342,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '../stores/user'
+import { getUserAvatarUrl } from '@/utils/avatar'
 import { 
   VideoCamera,
   Star,
@@ -354,6 +355,12 @@ import {
 } from '@element-plus/icons-vue'
 
 const userStore = useUserStore()
+
+// 计算用户头像URL（自动处理 OSS 默认头像转换）
+const userAvatarUrl = computed(() => {
+  const profile = userStore.profile as any
+  return getUserAvatarUrl(profile?.avatar, profile?.gender || 'male')
+})
 
 interface LiveItem {
   id: string

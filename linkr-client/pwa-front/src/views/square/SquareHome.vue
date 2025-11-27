@@ -358,9 +358,9 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .soul-square-page {
-  background: #ffffff;
+  background: linear-gradient(135deg, #faf7ff 0%, #f3f0ff 100%);
   min-height: 100vh;
-  color: #333333;
+  color: #334155;
   position: relative;
 }
 
@@ -370,8 +370,9 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  background: #ffffff;
-  border-bottom: 1px solid #f0f0f0;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(196, 181, 253, 0.2);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -385,12 +386,12 @@ onMounted(() => {
       .time {
         font-size: 16px;
         font-weight: 600;
-        color: #333333;
+        color: #1e293b;
       }
 
       .date {
         font-size: 12px;
-        color: #666666;
+        color: #64748b;
       }
     }
   }
@@ -404,17 +405,17 @@ onMounted(() => {
         position: relative;
         font-size: 16px;
         font-weight: 600;
-        color: #666666;
+        color: #64748b;
         cursor: pointer;
         transition: all 0.3s ease;
         padding: 8px 0;
 
         &:hover {
-          color: #333333;
+          color: #475569;
         }
 
         &.active {
-          color: #333333;
+          color: #1e293b;
           
           &::after {
             content: '';
@@ -423,7 +424,7 @@ onMounted(() => {
             left: 0;
             right: 0;
             height: 3px;
-            background: #00ff88;
+            background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
             border-radius: 2px;
           }
         }
@@ -434,7 +435,7 @@ onMounted(() => {
           right: -8px;
           width: 6px;
           height: 6px;
-          background: #ff4757;
+          background: #ef4444;
           border-radius: 50%;
         }
       }
@@ -451,17 +452,18 @@ onMounted(() => {
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        background: #f8f9fa;
+        background: rgba(255, 255, 255, 0.8);
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         transition: all 0.3s ease;
-        color: #666666;
+        color: #64748b;
+        border: 1px solid rgba(196, 181, 253, 0.2);
 
         &:hover {
-          background: #e9ecef;
-          color: #333333;
+          background: rgba(255, 255, 255, 0.9);
+          color: #475569;
         }
 
         .notification-dot {
@@ -470,7 +472,7 @@ onMounted(() => {
           right: 6px;
           width: 8px;
           height: 8px;
-          background: #ff4757;
+          background: #ef4444;
           border-radius: 50%;
           border: 2px solid #ffffff;
         }
@@ -487,17 +489,18 @@ onMounted(() => {
   gap: 20px;
 
   .post-card {
-    background: #ffffff;
+    background: rgba(255, 255, 255, 0.9);
     border-radius: 16px;
     padding: 20px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    border: 1px solid #f0f0f0;
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(196, 181, 253, 0.2);
     cursor: pointer;
     transition: all 0.3s ease;
+    backdrop-filter: blur(20px);
 
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 8px 24px rgba(139, 92, 246, 0.2);
     }
 
     .post-header {

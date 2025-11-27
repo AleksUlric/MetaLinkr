@@ -1,0 +1,151 @@
+server:
+  port: 8082
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  application:
+    name: pwa-module
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+  
+  # 数据库配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/linkr_pwa?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: Xing@1225
+    
+  # Redis配置
+  redis:
+    host: localhost
+    port: 6379
+    password: 
+    database: 0
+    timeout: 3000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-wait: -1ms
+        max-idle: 8
+        min-idle: 0
+
+  # Jackson配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+# MyBatis Plus配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  mapper-locations: classpath*:mapper/**/*.xml
+
+# Nacos配置 - 已注释，改为单体应用
+# cloud:
+#   nacos:
+#     discovery:
+#       server-addr: localhost:8848
+#       namespace: public
+#       group: DEFAULT_GROUP
+#       service-name: ${spring.application.name}
+
+# QQ OAuth配置
+qq:
+  oauth:
+    app-id: YOUR_QQ_APP_ID
+    app-key: YOUR_QQ_APP_KEY
+    redirect-uri: http://localhost:3000/api/auth/qq/callback
+    scope: get_user_info
+    display: pc
+
+# 阿里云短信配置
+aliyun:
+  sms:
+    access-key-id: ${ALIYUN_ACCESS_KEY_ID:}
+    access-key-secret: ${ALIYUN_ACCESS_KEY_SECRET:}
+    sign-name: 杭州琳珂电子商务
+    template-code: SMS_326741025
+    template-content: "您的验证码是：${code}，5分钟内有效，请勿泄露。"
+    expire-minutes: 5
+    daily-limit: 10
+    send-interval: 60
+    enabled: true
+    test-mode: false
+    test-code: "123456"
+  
+  # 阿里云OSS配置
+  oss:
+    endpoint: https://oss-cn-hangzhou.aliyuncs.com
+    access-key-id: ${ALIYUN_ACCESS_KEY_ID:}
+    access-key-secret: ${ALIYUN_ACCESS_KEY_SECRET:}
+    bucket-name: meta-linkr
+    domain: https://meta-linkr.oss-cn-hangzhou.aliyuncs.com
+    path-prefix: uploads/
+    max-file-size: 10485760  # 10MB
+    allowed-extensions: jpg,jpeg,png,gif,webp,svg
+    enabled: true
+
+# Shiro配置
+shiro:
+  enabled: true
+  session:
+    timeout: 1800000  # 30分钟（毫秒）
+    validation-interval: 900000  # 15分钟（毫秒）
+
+# 日志配置
+logging:
+  level:
+    com.aleks.linkrmix.pwa: debug
+    org.apache.shiro: debug
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# CORS配置
+cors:
+  allowed-origins:
+    - http://localhost:5176
+    - http://127.0.0.1:5176
+    - http://localhost:3000
+    - http://127.0.0.1:3000
+  allowed-methods:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+    - OPTIONS
+    - PATCH
+  allowed-headers: "*"
+  allow-credentials: true
+  max-age: 3600
+
+# 管理端点配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always

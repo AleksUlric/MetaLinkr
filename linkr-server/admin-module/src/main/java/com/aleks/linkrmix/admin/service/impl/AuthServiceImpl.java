@@ -32,8 +32,6 @@ public class AuthServiceImpl implements AuthService {
                 .filter(user -> passwordUtil.check(loginDto.getPassword(), user.getPasswordHash()))
                 .map(user -> {
                     Map<String, Object> result = new HashMap<>();
-                    // TODO: 实现真实的JWT token生成
-                    result.put("token", "jwt-token-" + user.getUsername() + "-" + System.currentTimeMillis());
                     result.put("user", user);
                     return result;
                 })

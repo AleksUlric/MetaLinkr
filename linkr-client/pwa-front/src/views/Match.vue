@@ -4,7 +4,7 @@
     <div class="match-status-bar">
       <div class="status-info">
         <div class="user-avatar-container">
-          <el-avatar :src="userStore.profile?.avatar || 'https://picsum.photos/200/200?random=999'" :size="40" />
+          <el-avatar :src="userAvatarUrl" :size="40" />
           <div class="online-indicator"></div>
         </div>
         <div class="user-stats">
@@ -207,9 +207,16 @@
 import { ref, computed } from 'vue'
 import { useUserStore } from '../stores/user'
 import { ElMessage } from 'element-plus'
+import { getUserAvatarUrl } from '@/utils/avatar'
 import { Connection, Close, Star, StarFilled, Check } from '@element-plus/icons-vue'
 
 const userStore = useUserStore()
+
+// 计算用户头像URL（自动处理 OSS 默认头像转换）
+const userAvatarUrl = computed(() => {
+  const profile = userStore.profile as any
+  return getUserAvatarUrl(profile?.avatar, profile?.gender || 'male')
+})
 
 // 响应式数据
 const selectedMode = ref('appearance')

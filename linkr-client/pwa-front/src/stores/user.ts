@@ -3,71 +3,65 @@ import { ref, computed } from 'vue'
 import type { User, UserProfile } from '../types/user'
 import { mockUser, mockUserProfile } from '../mock/user'
 import { currentSmsApi } from '../services/sms'
+import { get, post } from '@/utils/request'
 
 export const useUserStore = defineStore('user', () => {
   const user = ref<User | null>(null)
   const profile = ref<UserProfile | null>(null)
-  const token = ref<string | null>(localStorage.getItem('token'))
 
-  const isLoggedIn = computed(() => !!token.value && !!user.value)
+  // Session认证，不需要token
+  const isLoggedIn = computed(() => !!user.value)
 
   const initUser = async () => {
-    if (token.value) {
-      try {
-        // 这里应该调用API获取用户信息
-        // const response = await api.getUserInfo()
-        // user.value = response.data
-        
-        // 临时使用mock数据
-        user.value = mockUser
-        profile.value = mockUserProfile
-      } catch (error) {
-        console.error('获取用户信息失败:', error)
-        logout()
+    try {
+      // 通过Session获取用户信息
+      const userData = await get<User>('/api/user/current')
+      if (userData) {
+        user.value = userData
+        // profile可以从user数据中提取或单独获取
+        profile.value = mockUserProfile // 临时使用mock，后续可以改为从API获取
       }
+    } catch (error) {
+      console.error('获取用户信息失败:', error)
+      // Session可能已过期，清除用户信息
+      logout()
     }
-    // 如果没有token，不自动设置用户，保持未登录状态
   }
 
   const login = async (_username: string, _password: string) => {
     try {
-      // 这里应该调用登录API
-      // const response = await api.login({ username, password })
-      // token.value = response.data.token
+      // 调用登录API（Session会自动设置）
+      await post('/api/auth/login', {
+        username: _username,
+        password: _password
+      })
       
-      // 临时使用mock数据
-      token.value = 'mock-token-' + Date.now()
-      localStorage.setItem('token', token.value)
-      
-      user.value = mockUser
-      profile.value = mockUserProfile
+      // 登录成功后获取用户信息
+      await initUser()
       
       return { success: true }
-    } catch (error) {
+    } catch (error: any) {
       console.error('登录失败:', error)
-      return { success: false, message: '登录失败' }
+      return { success: false, message: error.message || '登录失败' }
     }
   }
 
   // 手机号登录
   const loginWithPhone = async (phone: string, code: string) => {
     try {
-      const result = await currentSmsApi.loginWithPhone(phone, code)
+      // 调用短信登录API（Session会自动设置）
+      await post('/api/auth/login/sms', {
+        phone,
+        code
+      })
       
-      if (result.success && result.token && result.user) {
-        token.value = result.token
-        localStorage.setItem('token', token.value)
-        
-        user.value = result.user
-        profile.value = mockUserProfile
-        
-        return { success: true }
-      } else {
-        return { success: false, message: result.message || '登录失败' }
-      }
-    } catch (error) {
+      // 登录成功后获取用户信息
+      await initUser()
+      
+      return { success: true }
+    } catch (error: any) {
       console.error('手机号登录失败:', error)
-      return { success: false, message: '手机号登录失败' }
+      return { success: false, message: error.message || '手机号登录失败' }
     }
   }
 
@@ -105,26 +99,39 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  const logout = () => {
-    user.value = null
-    profile.value = null
-    token.value = null
-    localStorage.removeItem('token')
+  const logout = async () => {
+    try {
+      // 调用登出API（清除服务端Session）
+      await post('/api/auth/logout').catch(() => {
+        // 即使登出API失败，也清除本地状态
+      })
+    } catch (error) {
+      // 忽略错误
+    } finally {
+      user.value = null
+      profile.value = null
+      // 清除可能的本地存储（兼容旧代码）
+      localStorage.removeItem('token')
+    }
   }
 
   const updateProfile = async (profileData: Partial<UserProfile>) => {
     try {
-      // 这里应该调用更新用户信息API
-      // const response = await api.updateProfile(profileData)
+      // 调用后端API更新用户信息（使用Session认证）
+      await post('/api/user/complete-profile', profileData)
       
+      // 更新本地用户信息
       if (profile.value) {
         Object.assign(profile.value, profileData)
       }
+      if (user.value) {
+        Object.assign(user.value, profileData)
+      }
       
       return { success: true }
-    } catch (error) {
+    } catch (error: any) {
       console.error('更新用户信息失败:', error)
-      return { success: false, message: '更新失败' }
+      return { success: false, message: error.message || '更新失败，请稍后重试' }
     }
   }
 
@@ -339,7 +346,6 @@ export const useUserStore = defineStore('user', () => {
   return {
     user,
     profile,
-    token,
     isLoggedIn,
     initUser,
     login,

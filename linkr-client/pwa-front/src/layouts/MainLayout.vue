@@ -6,28 +6,6 @@
       <span>网络连接已断开，部分功能可能不可用</span>
     </div>
 
-    <!-- 顶部导航栏 -->
-    <div class="top-nav">
-      <div class="nav-left">
-        <el-button 
-          v-if="showBackButton" 
-          @click="goBack" 
-          :icon="ArrowLeft" 
-          circle 
-          size="small"
-        />
-        <span class="page-title">{{ currentPageTitle }}</span>
-      </div>
-      <div class="nav-right">
-        <el-button :icon="Search" circle size="small" @click="showSearch = true" />
-        <el-button :icon="Bell" circle size="small" @click="showNotifications = true">
-          <el-badge v-if="unreadNotifications > 0" :value="unreadNotifications" class="notification-badge" />
-        </el-button>
-        <el-button :icon="ChatDotRound" circle size="small" @click="showMessages = true">
-          <el-badge v-if="unreadMessages > 0" :value="unreadMessages" class="message-badge" />
-        </el-button>
-      </div>
-    </div>
 
     <!-- 主要内容区域 -->
     <div class="main-content">
@@ -169,15 +147,15 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ArrowLeft, Search, Bell, ChatDotRound, Trophy, ShoppingCart } from '@element-plus/icons-vue'
+import { Search, Bell, ChatDotRound, Trophy, ShoppingCart } from '@element-plus/icons-vue'
 import { mockChats } from '../mock/social'
 import { isOnline } from '../services/pwa'
-import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
-import 'dayjs/locale/zh-cn'
+// import dayjs from 'dayjs'
+// import relativeTime from 'dayjs/plugin/relativeTime'
+// import 'dayjs/locale/zh-cn'
 
-dayjs.extend(relativeTime)
-dayjs.locale('zh-cn')
+// dayjs.extend(relativeTime)
+// dayjs.locale('zh-cn')
 
 const router = useRouter()
 const route = useRoute()
@@ -190,7 +168,7 @@ const searchResults = ref<any[]>([])
 
 // Soul风格导航项配置
 const navItems = [
-  { name: 'Planet', title: '星球', icon: 'Star', badge: 0, hasDot: false },
+  { name: 'Planet', title: 'linkr', icon: 'Star', badge: 0, hasDot: false },
   { name: 'Square', title: '广场', icon: 'HomeFilled', badge: 0, hasDot: false },
   { name: 'Chat', title: '聊天', icon: 'ChatDotRound', badge: 11, hasDot: false },
   { name: 'Profile', title: '自己', icon: 'User', badge: 0, hasDot: false }
@@ -213,14 +191,6 @@ const allFeatures = [
 ]
 
 // 计算属性
-const currentPageTitle = computed(() => {
-  const currentItem = navItems.find(item => item.name === route.name)
-  return currentItem?.title || 'MetaLinkr'
-})
-
-const showBackButton = computed(() => {
-  return !navItems.some(item => item.name === route.name)
-})
 
 const unreadNotifications = computed(() => {
   return 3 // 模拟未读通知数量
@@ -235,9 +205,6 @@ const navigateTo = (routeName: string) => {
   router.push({ name: routeName })
 }
 
-const goBack = () => {
-  router.back()
-}
 
 const openChat = (chatId: string) => {
   router.push({ name: 'Chat', params: { id: chatId } })
@@ -275,7 +242,8 @@ const handleSearchResult = (result: any) => {
 }
 
 const formatTime = (time: string) => {
-  return dayjs(time).fromNow()
+  // return dayjs(time).fromNow()
+  return new Date(time).toLocaleString('zh-CN')
 }
 </script>
 
@@ -314,61 +282,12 @@ const formatTime = (time: string) => {
   }
 }
 
-.top-nav {
-  height: 56px;
-  background: var(--bg-primary);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  border-bottom: 1px solid var(--border-secondary);
-  z-index: 1000;
-
-  .nav-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
-    .page-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-  }
-
-  .nav-right {
-    display: flex;
-    gap: 8px;
-
-    .el-button {
-      background: transparent;
-      border: none;
-      color: var(--text-secondary);
-      transition: all 0.2s ease;
-
-      &:hover {
-        background: var(--bg-tertiary);
-        color: var(--text-primary);
-      }
-    }
-
-    .notification-badge,
-    .message-badge {
-      :deep(.el-badge__content) {
-        top: 5px;
-        right: 5px;
-        background: var(--danger-gradient);
-        border: 2px solid white;
-        font-weight: 600;
-      }
-    }
-  }
-}
 
 .main-content {
   flex: 1;
   overflow-y: auto;
   padding-bottom: 88px;
+  padding-top: 0;
 }
 
 .soul-bottom-nav {

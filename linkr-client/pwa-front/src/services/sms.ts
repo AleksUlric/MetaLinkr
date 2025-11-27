@@ -1,4 +1,4 @@
-import axios from 'axios'
+import { post } from '@/utils/request'
 
 // 短信验证码相关API接口
 export interface SmsApi {
@@ -120,36 +120,39 @@ export const smsApi: SmsApi = {
 export const realSmsApi: SmsApi = {
   async sendSmsCode(phone: string, type: 'login' | 'register' | 'reset') {
     try {
-      const response = await axios.post('/api/sms/send', { phone, type })
-      return response.data
+      const result = await post<{ success: boolean; message?: string }>('/api/sms/send', { phone, type })
+      return result
     } catch (error: any) {
       return { 
         success: false, 
-        message: error.response?.data?.message || '发送验证码失败' 
+        message: error.message || '发送验证码失败' 
       }
     }
   },
 
   async verifySmsCode(phone: string, code: string) {
     try {
-      const response = await axios.post('/api/sms/verify', { phone, code })
-      return response.data
+      const result = await post<{ success: boolean; message?: string }>('/api/sms/verify', { phone, code })
+      return result
     } catch (error: any) {
       return { 
         success: false, 
-        message: error.response?.data?.message || '验证码验证失败' 
+        message: error.message || '验证码验证失败' 
       }
     }
   },
 
   async loginWithPhone(phone: string, code: string) {
     try {
-      const response = await axios.post('/api/auth/phone-login', { phone, code })
-      return response.data
+      const result = await post<{ success: boolean; token?: string; user?: any; message?: string }>(
+        '/api/auth/phone-login',
+        { phone, code }
+      )
+      return result
     } catch (error: any) {
       return { 
         success: false, 
-        message: error.response?.data?.message || '登录失败' 
+        message: error.message || '登录失败' 
       }
     }
   }

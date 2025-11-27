@@ -18,7 +18,7 @@
         
         <div class="heart-icon">
           <el-icon size="40" color="#ff6b6b">
-            <Heart />
+            <Star />
           </el-icon>
         </div>
         
@@ -39,7 +39,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { CircleCheck, Heart } from '@element-plus/icons-vue'
+import { CircleCheck, Star } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()

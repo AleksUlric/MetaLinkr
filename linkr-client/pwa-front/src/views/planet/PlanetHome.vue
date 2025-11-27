@@ -1,39 +1,5 @@
 <template>
   <div class="soul-planet-page">
-    <!-- Soul风格顶部状态栏 -->
-    <div class="soul-status-bar">
-      <div class="status-left">
-        <div class="time-info">
-          <span class="time">{{ currentTime }}</span>
-          <span class="date">{{ currentDate }}</span>
-        </div>
-      </div>
-      <div class="status-center">
-        <div class="soul-title">Soul</div>
-        <div class="filter-btn" @click="showFilter">
-          <el-icon><Filter /></el-icon>
-          <span>筛选</span>
-        </div>
-      </div>
-      <div class="status-right">
-        <div class="network-info">
-          <span class="speed">{{ networkSpeed }}</span>
-          <span class="signal">5G</span>
-          <div class="signal-bars">
-            <div class="bar"></div>
-            <div class="bar"></div>
-            <div class="bar"></div>
-            <div class="bar"></div>
-          </div>
-        </div>
-        <div class="battery-info">
-          <span class="battery-level">{{ batteryLevel }}%</span>
-          <div class="battery-icon">
-            <div class="battery-fill" :style="{ width: batteryLevel + '%' }"></div>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Soul风格功能按钮 -->
     <div class="soul-feature-buttons">
@@ -63,11 +29,11 @@
     <!-- Soul风格主要功能卡片 -->
     <div class="soul-main-cards">
       <div class="card-row">
-        <!-- 灵魂匹配卡片 -->
+        <!-- 灵犀链接卡片 -->
         <div class="soul-card soul-match-card" @click="startSoulMatch">
           <div class="card-background soul-match-bg"></div>
           <div class="card-content">
-            <div class="card-title">灵魂匹配</div>
+            <div class="card-title">灵犀链接</div>
             <div class="card-subtitle">今日剩余{{ matchCount }}次</div>
             <div class="card-button">开始匹配</div>
             <div class="card-character soul-match-char">💫</div>
@@ -187,18 +153,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Filter } from '@element-plus/icons-vue'
 
 const router = useRouter()
 
 // 响应式数据
-const currentTime = ref('1:41')
-const currentDate = ref('10月9日周四')
-const networkSpeed = ref('1.24 K/s')
-const batteryLevel = ref(64)
 const onlineCount = ref(14424048)
 const matchCount = ref(35)
 const voiceCount = ref(10)
@@ -262,24 +223,8 @@ const generateStars = () => {
   }
 }
 
-// 更新时间
-const updateTime = () => {
-  const now = new Date()
-  const hours = now.getHours().toString().padStart(2, '0')
-  const minutes = now.getMinutes().toString().padStart(2, '0')
-  currentTime.value = `${hours}:${minutes}`
-  
-  const month = now.getMonth() + 1
-  const date = now.getDate()
-  const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-  const weekday = weekdays[now.getDay()]
-  currentDate.value = `${month}月${date}日${weekday}`
-}
 
 // 方法
-const showFilter = () => {
-  ElMessage.info('筛选功能开发中...')
-}
 
 const startSoulTest = () => {
   ElMessage.success('开始灵魂测试')
@@ -291,7 +236,7 @@ const showZodiac = () => {
 }
 
 const startSoulMatch = () => {
-  ElMessage.success('开始灵魂匹配')
+  ElMessage.success('开始灵犀链接')
   router.push('/match/soul')
 }
 
@@ -331,27 +276,19 @@ const joinParty = (party: any) => {
 
 // 生命周期
 onMounted(() => {
-  updateTime()
   generateStars()
-  
-  // 每秒更新时间
-  const timeInterval = setInterval(updateTime, 1000)
-  
-  onUnmounted(() => {
-    clearInterval(timeInterval)
-  })
 })
 </script>
 
 <style lang="scss" scoped>
 .soul-planet-page {
-  background: #1a1a1a;
+  background: linear-gradient(135deg, #faf7ff 0%, #f3f0ff 100%);
   min-height: 100vh;
-  color: #ffffff;
+  color: #334155;
   position: relative;
   overflow-x: hidden;
   
-  // Soul风格的深色星空背景
+  // 清新风格的浅紫色背景
   &::before {
     content: '';
     position: fixed;
@@ -360,147 +297,17 @@ onMounted(() => {
     right: 0;
     bottom: 0;
     background: 
-      radial-gradient(circle at 20% 20%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-      radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%),
-      linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      radial-gradient(circle at 20% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(196, 181, 253, 0.06) 0%, transparent 50%),
+      linear-gradient(135deg, #faf7ff 0%, #f3f0ff 100%);
     z-index: -2;
     pointer-events: none;
   }
 }
 
-// Soul风格顶部状态栏
-.soul-status-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  background: rgba(26, 26, 26, 0.8);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 100;
 
-  .status-left {
-    .time-info {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-
-      .time {
-        font-size: 16px;
-        font-weight: 600;
-        color: #ffffff;
-      }
-
-      .date {
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.7);
-      }
-    }
-  }
-
-  .status-center {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-
-    .soul-title {
-      font-size: 24px;
-      font-weight: 700;
-      color: #ffffff;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    }
-
-    .filter-btn {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 8px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.8);
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.2);
-        color: #ffffff;
-      }
-    }
-  }
-
-  .status-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
-    .network-info {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.8);
-
-      .signal-bars {
-        display: flex;
-        gap: 2px;
-        margin-left: 4px;
-
-        .bar {
-          width: 3px;
-          height: 8px;
-          background: #00ff88;
-          border-radius: 1px;
-
-          &:nth-child(1) { height: 4px; }
-          &:nth-child(2) { height: 6px; }
-          &:nth-child(3) { height: 8px; }
-          &:nth-child(4) { height: 10px; }
-        }
-      }
-    }
-
-    .battery-info {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.8);
-
-      .battery-icon {
-        width: 20px;
-        height: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.6);
-        border-radius: 2px;
-        position: relative;
-
-        &::after {
-          content: '';
-          position: absolute;
-          right: -3px;
-          top: 2px;
-          width: 2px;
-          height: 4px;
-          background: rgba(255, 255, 255, 0.6);
-          border-radius: 0 1px 1px 0;
-        }
-
-        .battery-fill {
-          height: 100%;
-          background: #00ff88;
-          border-radius: 1px;
-          transition: width 0.3s ease;
-        }
-      }
-    }
-  }
-}
-
-// Soul风格功能按钮
+// 清新风格功能按钮
 .soul-feature-buttons {
   display: flex;
   justify-content: center;
@@ -514,17 +321,18 @@ onMounted(() => {
     align-items: center;
     gap: 8px;
     padding: 16px 20px;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.9);
     border-radius: 20px;
     cursor: pointer;
     transition: all 0.3s ease;
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(196, 181, 253, 0.3);
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.1);
 
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2);
+      border-color: rgba(196, 181, 253, 0.5);
     }
 
     .btn-icon {
@@ -534,31 +342,31 @@ onMounted(() => {
 
     span {
       font-size: 14px;
-      color: #ffffff;
+      color: #475569;
       font-weight: 500;
     }
 
     &.soul-test {
-      background: linear-gradient(135deg, rgba(43, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
-      border-color: rgba(43, 233, 123, 0.3);
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+      border-color: rgba(34, 197, 94, 0.2);
     }
 
     &.zodiac {
-      background: linear-gradient(135deg, rgba(250, 112, 154, 0.2) 0%, rgba(254, 225, 64, 0.2) 100%);
-      border-color: rgba(250, 112, 154, 0.3);
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+      border-color: rgba(168, 85, 247, 0.2);
     }
   }
 }
 
-// Soul风格在线人数
+// 清新风格在线人数
 .online-count {
   text-align: center;
   margin-bottom: 20px;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
+  color: #64748b;
 }
 
-// Soul风格卡片功能
+// 清新风格卡片功能
 .soul-cards-section {
   padding: 0 20px;
   margin-bottom: 20px;
@@ -568,15 +376,16 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
     padding: 12px 16px;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.9);
     border-radius: 16px;
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(196, 181, 253, 0.3);
     position: relative;
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.1);
 
     span {
       font-size: 14px;
-      color: rgba(255, 255, 255, 0.8);
+      color: #475569;
     }
 
     .notification-dot {
@@ -585,7 +394,7 @@ onMounted(() => {
       right: 8px;
       width: 8px;
       height: 8px;
-      background: #ff4757;
+      background: #ef4444;
       border-radius: 50%;
       animation: pulse 2s infinite;
     }
@@ -611,11 +420,12 @@ onMounted(() => {
     cursor: pointer;
     transition: all 0.3s ease;
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(196, 181, 253, 0.3);
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.1);
 
     &:hover {
       transform: translateY(-4px);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 12px 40px rgba(139, 92, 246, 0.2);
     }
 
     .card-background {
@@ -655,35 +465,37 @@ onMounted(() => {
       position: relative;
       z-index: 2;
       padding: 20px;
-      color: white;
+      color: #334155;
 
       .card-title {
         font-size: 16px;
         font-weight: 700;
         margin-bottom: 8px;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        color: #1e293b;
       }
 
       .card-subtitle {
         font-size: 12px;
-        opacity: 0.9;
+        color: #64748b;
         margin-bottom: 12px;
       }
 
       .card-button {
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.8);
         padding: 8px 16px;
         border-radius: 16px;
         font-size: 12px;
         font-weight: 600;
         text-align: center;
         backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        border: 1px solid rgba(148, 163, 184, 0.3);
         margin-bottom: 12px;
         transition: all 0.3s ease;
+        color: #475569;
 
         &:hover {
-          background: rgba(255, 255, 255, 0.3);
+          background: rgba(255, 255, 255, 0.9);
+          color: #334155;
         }
       }
 
@@ -756,18 +568,18 @@ onMounted(() => {
     h3 {
       font-size: 18px;
       font-weight: 700;
-      color: #ffffff;
+      color: #1e293b;
       margin: 0;
     }
 
     .parties-hall {
       font-size: 14px;
-      color: rgba(255, 255, 255, 0.8);
+      color: #64748b;
       cursor: pointer;
       transition: color 0.3s ease;
 
       &:hover {
-        color: #ffffff;
+        color: #475569;
       }
     }
   }
@@ -778,19 +590,20 @@ onMounted(() => {
     gap: 12px;
 
     .party-card {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.9);
       border-radius: 16px;
       padding: 16px;
       cursor: pointer;
       transition: all 0.3s ease;
       backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(196, 181, 253, 0.3);
       position: relative;
+      box-shadow: 0 4px 16px rgba(139, 92, 246, 0.1);
 
       &:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        border-color: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2);
+        border-color: rgba(196, 181, 253, 0.5);
       }
 
       .party-icon {
@@ -803,13 +616,13 @@ onMounted(() => {
         .party-title {
           font-size: 14px;
           font-weight: 600;
-          color: #ffffff;
+          color: #1e293b;
           margin-bottom: 4px;
         }
 
         .party-desc {
           font-size: 12px;
-          color: rgba(255, 255, 255, 0.7);
+          color: #64748b;
           margin-bottom: 8px;
           line-height: 1.4;
         }
@@ -838,7 +651,7 @@ onMounted(() => {
 
           .participant-count {
             font-size: 11px;
-            color: rgba(255, 255, 255, 0.6);
+            color: #94a3b8;
           }
         }
       }

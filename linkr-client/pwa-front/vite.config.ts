@@ -123,11 +123,12 @@ export default defineConfig({
     port: 5176,
     host: '0.0.0.0',
     open: false,
-    proxy: {
+      proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8080',
+        target: 'http://127.0.0.1:8082',
         changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/api/, ''),
+        // 不重写路径，保留 /api 前缀，因为后端接口路径包含 /api
+        // rewrite: (p) => p.replace(/^\/api/, ''),
       },
     },
   },

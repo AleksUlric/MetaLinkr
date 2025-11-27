@@ -22,6 +22,14 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: false, hideNavBar: true }
   },
   
+  // 完善个人信息页
+  {
+    path: '/complete-profile',
+    name: 'CompleteProfile',
+    component: () => import('@/views/profile/CompleteProfile.vue'),
+    meta: { requiresAuth: true, hideNavBar: true }
+  },
+  
   // Soul风格主应用布局
   {
     path: '/app',
@@ -69,7 +77,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'profile',
         name: 'Profile',
-        component: () => import('@/views/Profile.vue'),
+        component: () => import('@/views/profile/UserProfile.vue'),
         meta: { 
           title: '自己', 
           icon: 'User',
@@ -95,6 +103,18 @@ const routes: RouteRecordRaw[] = [
   },
   
   // 匹配相关页面
+  {
+    path: '/match/soul',
+    name: 'SoulMatch',
+    component: () => import('@/views/match/SoulMatch.vue'),
+    meta: { requiresAuth: true, hideNavBar: true }
+  },
+  {
+    path: '/match/voice',
+    name: 'VoiceMatch',
+    component: () => import('@/views/match/VoiceMatch.vue'),
+    meta: { requiresAuth: true, hideNavBar: true }
+  },
   {
     path: '/match/swipe',
     name: 'MatchSwipe',
@@ -158,9 +178,15 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, hideNavBar: true }
   },
   {
-    path: '/user/edit',
+    path: '/profile/edit',
     name: 'EditProfile',
-    component: () => import('@/views/user/EditProfile.vue'),
+    component: () => import('@/views/profile/EditProfile.vue'),
+    meta: { requiresAuth: true, hideNavBar: true }
+  },
+  {
+    path: '/profile/achievements',
+    name: 'Achievements',
+    component: () => import('@/views/profile/Achievements.vue'),
     meta: { requiresAuth: true, hideNavBar: true }
   },
   
@@ -226,6 +252,94 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, hideNavBar: true }
   },
   
+  // 通知相关页面
+  {
+    path: '/notifications',
+    name: 'NotificationCenter',
+    component: () => import('@/views/notification/NotificationCenter.vue'),
+    meta: { requiresAuth: true, hideNavBar: true }
+  },
+  
+  // 社区相关页面
+  {
+    path: '/community',
+    name: 'CommunityHome',
+    component: () => import('@/views/community/CommunityHome.vue'),
+    meta: { requiresAuth: true, hideNavBar: true }
+  },
+  {
+    path: '/community/:id',
+    name: 'CommunityDetail',
+    component: () => import('@/views/community/CommunityDetail.vue'),
+    meta: { requiresAuth: true, hideNavBar: true }
+  },
+  // {
+  //   path: '/topic/:id',
+  //   name: 'TopicDetail',
+  //   component: () => import('@/views/community/TopicDetail.vue'),
+  //   meta: { requiresAuth: true, hideNavBar: true }
+  // },
+  // {
+  //   path: '/category/:id',
+  //   name: 'CategoryDetail',
+  //   component: () => import('@/views/community/CategoryDetail.vue'),
+  //   meta: { requiresAuth: true, hideNavBar: true }
+  // },
+  
+  // 礼物相关页面
+  {
+    path: '/gift/shop',
+    name: 'GiftShop',
+    component: () => import('@/views/gift/GiftShop.vue'),
+    meta: { requiresAuth: true, hideNavBar: true }
+  },
+  {
+    path: '/gift/send/:id',
+    name: 'GiftSend',
+    component: () => import('@/views/gift/GiftSend.vue'),
+    meta: { requiresAuth: true, hideNavBar: true }
+  },
+  
+  // 连接相关页面
+  {
+    path: '/link',
+    name: 'LinkHome',
+    component: () => import('@/views/link/LinkHome.vue'),
+    meta: { requiresAuth: true, hideNavBar: true }
+  },
+  {
+    path: '/link/online',
+    name: 'OnlineConnect',
+    component: () => import('@/views/link/OnlineConnect.vue'),
+    meta: { requiresAuth: true, hideNavBar: true }
+  },
+  {
+    path: '/link/offline',
+    name: 'OfflineConnect',
+    component: () => import('@/views/link/OfflineConnect.vue'),
+    meta: { requiresAuth: true, hideNavBar: true }
+  },
+  
+  // 认证相关页面
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/auth/Login.vue'),
+    meta: { hideNavBar: true }
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: () => import('@/views/auth/Register.vue'),
+    meta: { hideNavBar: true }
+  },
+  {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: () => import('@/views/auth/ForgotPassword.vue'),
+    meta: { hideNavBar: true }
+  },
+  
   // 404页面
   {
     path: '/:pathMatch(.*)*',
@@ -244,18 +358,40 @@ const router = createRouter({
 router.beforeEach(async (to, _from, next) => {
   try {
     // 获取用户store
-    const { useUserStore } = await import('../stores/user')
-    const userStore = useUserStore()
+    const { useAuthStore } = await import('../stores/auth')
+    const authStore = useAuthStore()
     
     // 只在首次访问时初始化用户信息
-    if (!userStore.user) {
-      await userStore.initUser()
+    if (!authStore.user) {
+      await authStore.initUser()
     }
     
     // 检查是否需要认证
-    if (to.meta.requiresAuth && !userStore.isLoggedIn) {
+    if (to.meta.requiresAuth && !authStore.isLoggedIn) {
       // 需要认证但未登录，跳转到登录页
       next('/login')
+    } else if (authStore.isLoggedIn && authStore.user) {
+      // 已登录用户，检查是否需要完善个人信息
+      const isProfileComplete = Boolean(
+        authStore.user.nickname?.trim() &&
+        authStore.user.gender &&
+        authStore.user.gender !== 'other' &&
+        authStore.user.birthday
+      )
+      
+      // 如果个人信息不完整且不是访问完善页面，跳转到完善页面
+      if (!isProfileComplete && to.path !== '/complete-profile' && to.path !== '/login') {
+        next('/complete-profile')
+        return
+      }
+      
+      // 如果个人信息已完善且访问完善页面，跳转到主页
+      if (isProfileComplete && to.path === '/complete-profile') {
+        next('/app/planet')
+        return
+      }
+      
+      next()
     } else {
       next()
     }

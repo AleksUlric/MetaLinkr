@@ -50,7 +50,7 @@
       <div class="profile-content">
         <div class="avatar-section">
           <div class="avatar-container">
-            <el-avatar :src="userStore.profile?.avatar || 'https://picsum.photos/200/200?random=999'" :size="90" />
+            <el-avatar :src="userAvatarUrl" :size="90" />
             <div class="online-status"></div>
             <div class="vip-badge" v-if="isVip">VIP</div>
             <div class="edit-avatar-btn" @click="editProfile">
@@ -185,9 +185,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useUserStore } from '../stores/user'
 import { ElMessage } from 'element-plus'
+import { getUserAvatarUrl } from '@/utils/avatar'
 import { 
   Setting,
   MoreFilled,
@@ -201,6 +202,12 @@ import {
 
 const userStore = useUserStore()
 
+// 计算用户头像URL（自动处理 OSS 默认头像转换）
+const userAvatarUrl = computed(() => {
+  const profile = userStore.profile as any
+  return getUserAvatarUrl(profile?.avatar, profile?.gender || 'male')
+})
+
 // 响应式数据
 const currentTime = ref('1:42')
 const currentDate = ref('10月9日周四')
@@ -210,9 +217,9 @@ const showBanner = ref(true)
 
 // 编辑表单
 const editForm = ref({
-  avatar: (userStore.profile as any)?.avatar || 'https://picsum.photos/200/200?random=999',
+  avatar: getUserAvatarUrl((userStore.profile as any)?.avatar, (userStore.profile as any)?.gender || 'male'),
   nickname: (userStore.profile as any)?.nickname || '',
-  gender: 'male' as 'male' | 'female' | 'other',
+  gender: ((userStore.profile as any)?.gender || 'male') as 'male' | 'female' | 'other',
   age: 25,
   bio: '这个人很懒，什么都没有留下~',
   interests: ['音乐', '电影', '旅行']
@@ -265,9 +272,9 @@ onMounted(() => {
   
   // 初始化数据
   editForm.value = {
-    avatar: (userStore.profile as any)?.avatar || 'https://picsum.photos/200/200?random=999',
+    avatar: getUserAvatarUrl((userStore.profile as any)?.avatar, (userStore.profile as any)?.gender || 'male'),
     nickname: (userStore.profile as any)?.nickname || '',
-    gender: 'male' as 'male' | 'female' | 'other',
+    gender: ((userStore.profile as any)?.gender || 'male') as 'male' | 'female' | 'other',
     age: 25,
     bio: '这个人很懒，什么都没有留下~',
     interests: ['音乐', '电影', '旅行']
