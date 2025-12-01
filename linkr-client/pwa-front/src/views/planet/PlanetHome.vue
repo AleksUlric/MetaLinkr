@@ -236,7 +236,7 @@ const showZodiac = () => {
 }
 
 const startSoulMatch = () => {
-  ElMessage.success('开始灵犀链接')
+  ElMessage.success('灵犀匹配正在为你排队')
   router.push('/match/soul')
 }
 

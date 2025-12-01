@@ -7,6 +7,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
 
 const BASE_URL = 'http://localhost:8082'
+export const API_BASE_URL = BASE_URL
 
 // 创建 axios 实例
 const axiosInstance: AxiosInstance = axios.create({

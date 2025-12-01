@@ -47,13 +47,18 @@
       </div>
       
       <div class="user-info">
-        <div class="user-name">{{ userInfo.name }}</div>
-        <div class="user-id">ID: {{ userInfo.id }}</div>
-        <div class="user-bio">{{ userInfo.bio }}</div>
+        <div class="user-name">{{ userInfo.name || '加载中...' }}</div>
+        <div class="user-id" v-if="userInfo.id">ID: {{ userInfo.id }}</div>
+        <div class="user-bio">{{ userInfo.bio || '这个人很懒，什么都没有留下~' }}</div>
         <div class="user-details">
-          <span class="gender-age">{{ userInfo.gender }} {{ userInfo.age }}岁</span>
-          <span class="location"><el-icon><Location /></el-icon>{{ userInfo.location }}</span>
-          <span class="occupation"><el-icon><Briefcase /></el-icon>{{ userInfo.occupation }}</span>
+          <span class="gender-age" v-if="userInfo.age > 0">{{ userInfo.gender }} {{ userInfo.age }}岁</span>
+          <span class="gender-age" v-else-if="userInfo.gender">{{ userInfo.gender }}</span>
+          <span class="location" v-if="userInfo.location && userInfo.location !== '未设置'">
+            <el-icon><Location /></el-icon>{{ userInfo.location }}
+          </span>
+          <span class="occupation" v-if="userInfo.occupation">
+            <el-icon><Briefcase /></el-icon>{{ userInfo.occupation }}
+          </span>
         </div>
       </div>
 
@@ -80,6 +85,7 @@
       </div>
       <div class="tags-list">
         <span v-for="tag in userInfo.tags" :key="tag" class="tag-item">{{ tag }}</span>
+        <span v-if="userInfo.tags.length === 0" class="tag-empty">暂无兴趣标签</span>
       </div>
     </div>
 
@@ -168,10 +174,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import SmartAvatar from '@/components/SmartAvatar.vue'
+import { get } from '@/utils/request'
+import { getUserAvatarUrl } from '@/utils/avatar'
 import { 
   ArrowLeft, 
   Share, 
@@ -193,22 +201,22 @@ const router = useRouter()
 
 // 响应式数据
 const userInfo = ref({
-  id: '123456789',
-  name: '小明的世界',
-  avatar: 'https://picsum.photos/200/200?random=1',
-  bio: '热爱生活，喜欢分享美好瞬间 ✨',
+  id: '',
+  name: '',
+  avatar: '',
+  bio: '',
   gender: '男',
-  age: 25,
-  location: '杭州',
-  occupation: '软件工程师',
-  isVerified: true,
-  followers: 1234,
-  following: 567,
-  likes: 8901,
-  level: 8,
-  exp: 2450,
-  levelProgress: 68,
-  tags: ['摄影', '旅行', '美食', '音乐', '电影', '编程'],
+  age: 0,
+  location: '',
+  occupation: '',
+  isVerified: false,
+  followers: 0,
+  following: 0,
+  likes: 0,
+  level: 1,
+  exp: 0,
+  levelProgress: 0,
+  tags: [] as string[],
   achievements: [
     { id: 1, name: '新人报到', icon: '🏆' },
     { id: 2, name: '活跃用户', icon: '⭐' },
@@ -257,7 +265,94 @@ const getLevelAvatar = (level: number) => {
 }
 
 const getNextLevelExp = (level: number) => {
-  return level * 500 // 每级需要500经验
+  return (level + 1) * 500 // 下一级需要500经验
+}
+
+// 计算年龄（从生日）
+const calculateAge = (birthday: string | null | undefined): number => {
+  if (!birthday) return 0
+  try {
+    const birthDate = new Date(birthday)
+    const today = new Date()
+    let age = today.getFullYear() - birthDate.getFullYear()
+    const monthDiff = today.getMonth() - birthDate.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--
+    }
+    return age
+  } catch (e) {
+    return 0
+  }
+}
+
+// 转换性别显示
+const formatGender = (gender: string | null | undefined): string => {
+  if (!gender) return '未知'
+  switch (gender.toLowerCase()) {
+    case 'male':
+      return '男'
+    case 'female':
+      return '女'
+    case 'other':
+      return '其他'
+    default:
+      return gender
+  }
+}
+
+// 加载用户信息
+const loadUserProfile = async () => {
+  try {
+    const profileData = await get<any>('/api/user/profile')
+    if (profileData) {
+      // 处理 interests（可能是数组或字符串）
+      let interests: string[] = []
+      if (Array.isArray(profileData.interests)) {
+        interests = profileData.interests
+      } else if (typeof profileData.interests === 'string' && profileData.interests) {
+        try {
+          // 尝试解析 JSON
+          interests = JSON.parse(profileData.interests)
+        } catch {
+          // 如果不是 JSON，按逗号分隔
+          interests = profileData.interests.split(',').filter(Boolean)
+        }
+      }
+
+      // 计算年龄
+      const age = calculateAge(profileData.birthday)
+
+      // 计算等级进度
+      const currentLevel = profileData.level || 1
+      const currentExp = profileData.experience || 0
+      const nextLevelExp = getNextLevelExp(currentLevel)
+      const levelProgress = Math.min(Math.round((currentExp / nextLevelExp) * 100), 100)
+
+      // 更新用户信息
+      userInfo.value = {
+        id: String(profileData.id || ''),
+        name: profileData.nickname || '未设置昵称',
+        avatar: getUserAvatarUrl(profileData.avatar, profileData.gender || 'male'),
+        bio: profileData.bio || '这个人很懒，什么都没有留下~',
+        gender: formatGender(profileData.gender),
+        age,
+        location: profileData.location || '未设置',
+        occupation: '', // 后端暂无此字段
+        isVerified: profileData.isVerified || false,
+        followers: 0, // 后端暂无此字段
+        following: 0, // 后端暂无此字段
+        likes: 0, // 后端暂无此字段
+        level: currentLevel,
+        exp: currentExp,
+        levelProgress,
+        tags: interests,
+        achievements: userInfo.value.achievements // 保持默认成就
+      }
+    }
+  } catch (error) {
+    console.error('加载用户信息失败:', error)
+    ElMessage.error('加载用户信息失败')
+  }
 }
 
 // 方法
@@ -300,6 +395,11 @@ const viewFavorite = (favorite: any) => {
 const viewLike = (like: any) => {
   ElMessage.info(`查看点赞: ${like.title}`)
 }
+
+// 组件挂载时加载用户信息
+onMounted(() => {
+  loadUserProfile()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -562,6 +662,12 @@ const viewLike = (like: any) => {
       font-size: 14px;
       font-weight: 500;
       border: 1px solid rgba(139, 92, 246, 0.2);
+    }
+
+    .tag-empty {
+      color: #94a3b8;
+      font-size: 14px;
+      font-style: italic;
     }
   }
 }

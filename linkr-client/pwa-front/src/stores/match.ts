@@ -1,189 +1,159 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import type { MatchResult, MatchUser } from '@/types/match'
+import {
+  fetchSoulRecommendations,
+  fetchSoulMatchResults,
+  likeSoulUser as likeSoulUserApi,
+  passSoulUser,
+  type SoulMatchUserResponse,
+  type MatchResultResponse
+} from '@/services/soulMatch'
 
-export interface MatchUser {
-  id: string
-  name: string
-  age: number
-  avatar: string
-  photos: string[]
-  bio: string
-  interests: string[]
-  location: string
-  distance: number
-  isOnline: boolean
-  lastActive: number
-}
+const fallbackDistance = () => Math.round((4 + Math.random() * 6) * 10) / 10
 
-export interface MatchResult {
-  id: string
-  userId: string
-  isMatch: boolean
-  timestamp: number
-  message?: string
-}
+const mapUser = (user: SoulMatchUserResponse): MatchUser => ({
+  id: user.id,
+  name: user.name ?? '灵犀星友',
+  age: user.age ?? null,
+  avatar: user.avatar ?? null,
+  photos: user.photos ?? [],
+  bio: user.bio ?? '这个人有点神秘，快去聊天了解TA吧～',
+  interests: user.interests ?? [],
+  location: user.location ?? '灵犀星球',
+  distance: user.distance ?? fallbackDistance(),
+  isOnline: user.isOnline ?? user.online ?? false,
+  lastActive: user.lastActiveTimestamp ?? Date.now(),
+  compatibility: user.compatibility ?? 80
+})
+
+const mapResult = (result: MatchResultResponse): MatchResult => ({
+  id: result.recordId,
+  userId: result.userId,
+  isMatch: result.match,
+  timestamp: result.timestamp ?? Date.now(),
+  message: result.message,
+  chatRoomId: result.chatRoomId,
+  targetUser: result.targetUser ? mapUser(result.targetUser) : undefined
+})
 
 export const useMatchStore = defineStore('match', () => {
-  // 推荐用户列表
   const recommendedUsers = ref<MatchUser[]>([])
-  
-  // 匹配结果列表
   const matchResults = ref<MatchResult[]>([])
-  
-  // 当前滑动用户
   const currentUser = ref<MatchUser | null>(null)
-  
-  // 是否正在加载
+  const lastMatchedUser = ref<MatchUser | null>(null)
   const isLoading = ref(false)
-  
-  // 获取推荐用户
-  const getRecommendedUsers = async () => {
+
+  const syncCurrentUser = () => {
+    if (recommendedUsers.value.length > 0) {
+      currentUser.value = recommendedUsers.value[0]
+      return
+    }
+    currentUser.value = null
+  }
+
+  const getRecommendedUsers = async (limit = 10) => {
     isLoading.value = true
-    
     try {
-      // 模拟数据
-      recommendedUsers.value = [
-        {
-          id: '1',
-          name: '小雨',
-          age: 22,
-          avatar: 'https://via.placeholder.com/300x400',
-          photos: [
-            'https://via.placeholder.com/300x400',
-            'https://via.placeholder.com/300x400',
-            'https://via.placeholder.com/300x400'
-          ],
-          bio: '喜欢旅行和摄影，寻找志同道合的朋友',
-          interests: ['旅行', '摄影', '美食'],
-          location: '北京市朝阳区',
-          distance: 2.5,
-          isOnline: true,
-          lastActive: Date.now() - 1000
-        },
-        {
-          id: '2',
-          name: '阳光',
-          age: 25,
-          avatar: 'https://via.placeholder.com/300x400',
-          photos: [
-            'https://via.placeholder.com/300x400',
-            'https://via.placeholder.com/300x400'
-          ],
-          bio: '程序员，热爱运动和音乐',
-          interests: ['编程', '运动', '音乐'],
-          location: '北京市海淀区',
-          distance: 5.2,
-          isOnline: false,
-          lastActive: Date.now() - 3600000
-        }
-      ]
-      
-      // 设置第一个用户为当前用户
-      if (recommendedUsers.value.length > 0) {
-        currentUser.value = recommendedUsers.value[0]
-      }
-      
+      const users = await fetchSoulRecommendations(limit)
+      recommendedUsers.value = (users ?? []).map(mapUser)
+      syncCurrentUser()
     } catch (error) {
-      console.error('获取推荐用户失败:', error)
+      console.error('获取灵犀推荐失败:', error)
+      throw error
     } finally {
       isLoading.value = false
     }
   }
-  
-  // 喜欢用户
-  const likeUser = async (userId: string) => {
-    try {
-      // 模拟API调用
-      const result: MatchResult = {
-        id: Date.now().toString(),
-        userId,
-        isMatch: Math.random() > 0.5, // 模拟匹配结果
-        timestamp: Date.now()
-      }
-      
-      matchResults.value.push(result)
-      
-      // 移除当前用户
-      recommendedUsers.value = recommendedUsers.value.filter(u => u.id !== userId)
-      
-      // 设置下一个用户为当前用户
-      if (recommendedUsers.value.length > 0) {
-        currentUser.value = recommendedUsers.value[0]
-      } else {
-        currentUser.value = null
-        // 重新获取推荐用户
+
+  const setLastMatchedUser = (user: MatchUser | null) => {
+    lastMatchedUser.value = user
+  }
+
+  const removeFromRecommendations = (userId: number) => {
+    recommendedUsers.value = recommendedUsers.value.filter((user) => user.id !== userId)
+  }
+
+  const ensureNextUser = async () => {
+    if (recommendedUsers.value.length === 0) {
+      currentUser.value = null
+      try {
         await getRecommendedUsers()
+      } catch {
+        // swallow errors so UI can handle retry
       }
-      
-      return result
-      
+      return
+    }
+    syncCurrentUser()
+  }
+
+  const likeUser = async (userId: number, superLike = false) => {
+    try {
+      const action = await likeSoulUserApi(userId, superLike)
+      const payload: MatchResult = action.result
+        ? mapResult(action.result)
+        : {
+            id: Date.now(),
+            userId,
+            isMatch: action.match,
+            timestamp: Date.now(),
+            message: action.match ? '灵犀双向匹配成功' : undefined,
+            chatRoomId: action.chatRoomId
+          }
+
+      if (!payload.targetUser && currentUser.value && currentUser.value.id === userId) {
+        payload.targetUser = currentUser.value
+      }
+
+      matchResults.value.unshift(payload)
+      removeFromRecommendations(userId)
+      await ensureNextUser()
+
+      return payload
     } catch (error) {
       console.error('喜欢用户失败:', error)
       throw error
     }
   }
-  
-  // 不喜欢用户
-  const dislikeUser = async (userId: string) => {
+
+  const dislikeUser = async (userId: number) => {
     try {
-      // 移除当前用户
-      recommendedUsers.value = recommendedUsers.value.filter(u => u.id !== userId)
-      
-      // 设置下一个用户为当前用户
-      if (recommendedUsers.value.length > 0) {
-        currentUser.value = recommendedUsers.value[0]
-      } else {
-        currentUser.value = null
-        // 重新获取推荐用户
-        await getRecommendedUsers()
-      }
-      
+      await passSoulUser(userId)
+      removeFromRecommendations(userId)
+      await ensureNextUser()
     } catch (error) {
-      console.error('不喜欢用户失败:', error)
+      console.error('跳过用户失败:', error)
       throw error
     }
   }
-  
-  // 获取匹配结果
-  const getMatchResults = async () => {
-    // 模拟数据
-    matchResults.value = [
-      {
-        id: '1',
-        userId: '1',
-        isMatch: true,
-        timestamp: Date.now() - 3600000,
-        message: '你们互相喜欢了！'
-      },
-      {
-        id: '2',
-        userId: '2',
-        isMatch: false,
-        timestamp: Date.now() - 7200000
-      }
-    ]
+
+  const getMatchResults = async (limit = 20) => {
+    try {
+      const results = await fetchSoulMatchResults(limit)
+      matchResults.value = (results ?? []).map(mapResult)
+    } catch (error) {
+      console.error('获取灵犀匹配结果失败:', error)
+      throw error
+    }
   }
-  
-  // 初始化匹配数据
+
   const initMatch = async () => {
-    await Promise.all([
-      getRecommendedUsers(),
-      getMatchResults()
-    ])
+    await Promise.all([getRecommendedUsers(), getMatchResults()])
   }
-  
+
   return {
-    // 状态
     recommendedUsers,
     matchResults,
     currentUser,
+    lastMatchedUser,
     isLoading,
-    
-    // 方法
     getRecommendedUsers,
     likeUser,
     dislikeUser,
     getMatchResults,
-    initMatch
+    initMatch,
+    setLastMatchedUser
   }
 })
+
+export type { MatchResult, MatchUser }

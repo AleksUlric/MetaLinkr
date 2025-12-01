@@ -359,11 +359,17 @@ router.beforeEach(async (to, _from, next) => {
   try {
     // 获取用户store
     const { useAuthStore } = await import('../stores/auth')
+    const { useUserStore } = await import('../stores/user')
     const authStore = useAuthStore()
+    const userStore = useUserStore()
     
-    // 只在首次访问时初始化用户信息
-    if (!authStore.user) {
-      await authStore.initUser()
+    // 每次路由切换时，如果用户信息不存在，都从后端获取（确保获取正确的Session信息）
+    // 注意：这里不检查 isInitialized，因为刷新页面后 Pinia store 会重置
+    if (!authStore.user && !authStore.isLoading) {
+      // 清除旧的用户信息，确保从后端获取最新信息
+      authStore.clearAuth()
+      userStore.logout() // 这会清除 userStore.profile
+      await authStore.initUser(true) // 强制刷新，确保从后端获取最新信息
     }
     
     // 检查是否需要认证

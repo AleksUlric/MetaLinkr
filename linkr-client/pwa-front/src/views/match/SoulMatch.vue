@@ -1,664 +1,681 @@
 <template>
   <div class="soul-match-page">
-    <!-- 匹配界面 -->
-    <div class="match-container">
-      <!-- 用户卡片 -->
-      <div class="user-card" v-if="currentUser">
-        <div class="card-background">
-          <img :src="currentUser.avatar" :alt="currentUser.name" />
-        </div>
-        
-        <div class="card-content">
-          <div class="user-info">
-            <div class="user-name">{{ currentUser.name }}</div>
-            <div class="user-age">{{ currentUser.age }}岁</div>
-            <div class="user-location">
-              <el-icon><Location /></el-icon>
-              <span>{{ currentUser.location }}</span>
-            </div>
-          </div>
-          
-          <div class="user-tags">
-            <span 
-              v-for="tag in currentUser.tags" 
-              :key="tag"
-              class="tag"
-            >{{ tag }}</span>
-          </div>
-          
-          <div class="user-description">
-            {{ currentUser.description }}
-          </div>
-          
-          <!-- 兴趣匹配度 -->
-          <div class="match-score">
-            <div class="score-circle">
-              <div class="score-text">{{ matchScore }}%</div>
-              <div class="score-label">匹配度</div>
-            </div>
-            <div class="match-reasons">
-              <div 
-                v-for="reason in matchReasons" 
-                :key="reason"
-                class="reason-item"
-              >
-                <el-icon><Check /></el-icon>
-                <span>{{ reason }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+    <div class="soul-header">
+      <div class="title">
+        灵犀链接
+        <span class="badge">Beta</span>
       </div>
-      
-      <!-- 操作按钮 -->
-      <div class="action-buttons">
-        <div class="action-btn pass-btn" @click="passUser">
-          <el-icon><Close /></el-icon>
-          <span>跳过</span>
-        </div>
-        
-        <div class="action-btn super-like-btn" @click="superLike">
-          <el-icon><Star /></el-icon>
-          <span>超级喜欢</span>
-        </div>
-        
-        <div class="action-btn like-btn" @click="likeUser">
-          <el-icon><StarFilled /></el-icon>
-          <span>喜欢</span>
-        </div>
-      </div>
-      
-      <!-- 匹配成功弹窗 -->
-      <div v-if="showMatchSuccess" class="match-success-modal">
-        <div class="modal-background" @click="closeMatchSuccess"></div>
-        <div class="modal-content">
-          <div class="success-animation">
-            <div class="heart-animation">💕</div>
-            <div class="success-text">匹配成功！</div>
-            <div class="success-subtitle">你们互相喜欢了对方</div>
-          </div>
-          
-          <div class="matched-users">
-            <div class="user-avatar">
-              <img :src="currentUser.avatar" :alt="currentUser.name" />
-            </div>
-            <div class="heart-icon">💕</div>
-            <div class="user-avatar">
-              <img :src="userAvatar" :alt="userName" />
-            </div>
-          </div>
-          
-          <div class="success-actions">
-            <el-button type="primary" size="large" @click="startChat">
-              开始聊天
-            </el-button>
-            <el-button size="large" @click="continueMatching">
-              继续匹配
-            </el-button>
-          </div>
-        </div>
+      <div class="online-pill">
+        <span class="dot"></span>
+        {{ onlineCount.toLocaleString() }} 人正在在线匹配
       </div>
     </div>
-    
-    <!-- 匹配统计 -->
-    <div class="match-stats">
-      <div class="stat-item">
-        <div class="stat-number">{{ todayMatches }}</div>
-        <div class="stat-label">今日匹配</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-number">{{ totalLikes }}</div>
-        <div class="stat-label">总喜欢数</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-number">{{ remainingLikes }}</div>
-        <div class="stat-label">剩余喜欢</div>
+
+    <div class="match-container">
+      <div class="matching-state" :class="{ 'is-queued': isRealtimeQueued }">
+        <div class="matching-visual">
+          <div class="orbit orbit-large"></div>
+          <div class="orbit orbit-medium"></div>
+          <div class="orbit orbit-small"></div>
+          <div class="matching-avatar">
+            <img :src="selfAvatar" alt="me" />
+          </div>
+          <div class="matching-spark"></div>
+        </div>
+        <div class="matching-title">
+          {{ isRealtimeQueued ? '灵犀正在为你寻找缘分' : '已加入匹配队列' }}
+        </div>
+        <p class="matching-tip">
+          {{ currentMatchingTip }}
+        </p>
+        <div class="matching-progress">
+          <span
+            v-for="n in 4"
+            :key="n"
+            class="progress-dot"
+            :style="{ animationDelay: `${n * 0.15}s` }"
+          ></span>
+        </div>
+        <div class="matching-cancel-btn">
+          <el-button round @click="cancelMatching">
+            <el-icon><Close /></el-icon>
+            取消匹配
+          </el-button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import type { Ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
 import { ElMessage } from 'element-plus'
-import { 
-  Location, 
-  Check, 
-  Close, 
-  Star, 
-  StarFilled 
-} from '@element-plus/icons-vue'
+import { Close } from '@element-plus/icons-vue'
+import { Client, type IMessage, type StompSubscription } from '@stomp/stompjs'
+import SockJS from 'sockjs-client'
+import { API_BASE_URL } from '@/utils/request'
+import { useMatchStore } from '../../stores/match'
+import { useUserStore } from '../../stores/user'
+import type { MatchUser } from '../../types/match'
+import type { UserProfile } from '../../types/user'
+import type { SoulMatchUserResponse } from '../../services/soulMatch'
+import {
+  cancelRealtimeMatch,
+  enqueueRealtimeMatch,
+  sendRealtimeHeartbeat,
+  type RealtimeMatchStatusResponse
+} from '../../services/realtimeMatch'
+import { getUserAvatarUrl } from '../../utils/avatar'
 
 const router = useRouter()
+const matchStore = useMatchStore()
+const userStore = useUserStore()
+const { profile } = storeToRefs(userStore)
+const userProfile = profile as unknown as Ref<UserProfile | null>
 
-// 响应式数据
-const currentUser = ref<any>(null)
-const matchScore = ref(0)
-const matchReasons = ref<string[]>([])
-const showMatchSuccess = ref(false)
-const userAvatar = ref('')
-const userName = ref('')
-const todayMatches = ref(3)
-const totalLikes = ref(156)
-const remainingLikes = ref(12)
+const HEARTBEAT_INTERVAL = 25000
+const NO_MATCH_HINT_DELAY = 10 * 60 * 1000
+const STORAGE_DEVICE_KEY = 'soul_match_device_id'
 
-// 模拟用户数据
-const mockUsers = [
-  {
-    id: 1,
-    name: '小雨',
-    age: 24,
-    location: '杭州市',
-    avatar: 'https://picsum.photos/300/400?random=1',
-    tags: ['摄影', '旅行', '咖啡'],
-    description: '喜欢摄影和旅行的文艺青年，希望找到志同道合的朋友一起探索世界。'
-  },
-  {
-    id: 2,
-    name: '阳光',
-    age: 26,
-    location: '杭州市',
-    avatar: 'https://picsum.photos/300/400?random=2',
-    tags: ['运动', '音乐', '美食'],
-    description: '热爱生活的阳光男孩，喜欢运动和音乐，希望能遇到有趣的灵魂。'
-  },
-  {
-    id: 3,
-    name: '星辰',
-    age: 23,
-    location: '杭州市',
-    avatar: 'https://picsum.photos/300/400?random=3',
-    tags: ['读书', '电影', '绘画'],
-    description: '安静内敛的文艺女孩，喜欢读书和绘画，寻找心灵相通的伴侣。'
+const resolveDeviceId = () => {
+  if (typeof window === 'undefined') {
+    return `web-${Date.now()}`
   }
+  try {
+    const cached = window.localStorage.getItem(STORAGE_DEVICE_KEY)
+    if (cached) {
+      return cached
+    }
+    const generated =
+      window.crypto?.randomUUID?.() ??
+      `web-${Date.now()}-${Math.random().toString(16).slice(2)}`
+    window.localStorage.setItem(STORAGE_DEVICE_KEY, generated)
+    return generated
+  } catch {
+    return `web-${Date.now()}`
+  }
+}
+
+const deviceId = resolveDeviceId()
+
+const onlineCount = ref(1) // 初始值设为1，等待后端返回真实数据
+const selfAvatar = computed(() => {
+  const profile = userProfile.value
+  const gender = profile?.gender || 'male'
+  return getUserAvatarUrl(profile?.avatar, gender)
+})
+
+const realtimeStatus = ref<RealtimeMatchStatusResponse | null>(null)
+const isRealtimeQueued = ref(false)
+const realtimeFlowActive = ref(false)
+
+const matchingTips = [
+  'AI丘比特正在同步你们的心跳频率…',
+  '正在扫描同城灵犀信号，匹配默契指数…',
+  '为你挑选最懂你的人，请稍候…',
+  '灵犀星球已收到请求，正在建立通道…'
 ]
+const matchingTipIndex = ref(0)
+const currentMatchingTip = ref(matchingTips[0])
 
-// 方法
-const loadNextUser = () => {
-  const randomUser = mockUsers[Math.floor(Math.random() * mockUsers.length)]
-  currentUser.value = randomUser
-  matchScore.value = Math.floor(Math.random() * 40) + 60 // 60-100%
-  
-  // 随机生成匹配原因
-  const reasons = [
-    '都喜欢摄影',
-    '年龄相近',
-    '都在杭州',
-    '兴趣相似',
-    '性格互补'
-  ]
-  matchReasons.value = reasons.slice(0, Math.floor(Math.random() * 3) + 2)
+let heartbeatTimer: number | null = null
+let noMatchHintTimer: number | null = null
+let matchingTipTimer: number | null = null
+let matchStompClient: Client | null = null
+let matchSubscription: StompSubscription | null = null
+
+const mapRealtimeUser = (user: SoulMatchUserResponse): MatchUser => ({
+  id: user.id,
+  name: user.name ?? '灵犀星友',
+  age: user.age ?? null,
+  avatar: user.avatar ?? null,
+  photos: user.photos ?? [],
+  bio: user.bio ?? '这个人有点神秘，快去聊天了解TA吧～',
+  interests: user.interests ?? [],
+  location: user.location ?? '灵犀星球',
+  distance: user.distance ?? 0,
+  isOnline: user.isOnline ?? user.online ?? false,
+  lastActive: user.lastActiveTimestamp ?? Date.now(),
+  compatibility: user.compatibility ?? 80
+})
+
+const clearNoMatchHintTimer = () => {
+  if (noMatchHintTimer !== null) {
+    window.clearTimeout(noMatchHintTimer)
+    noMatchHintTimer = null
+  }
 }
 
-const passUser = () => {
-  ElMessage.info('已跳过')
-  loadNextUser()
+const startMatchingTipRotation = () => {
+  if (typeof window === 'undefined' || matchingTipTimer !== null) return
+  matchingTipTimer = window.setInterval(() => {
+    matchingTipIndex.value = (matchingTipIndex.value + 1) % matchingTips.length
+    currentMatchingTip.value = matchingTips[matchingTipIndex.value]
+  }, 2400)
 }
 
-const likeUser = () => {
-  if (remainingLikes.value <= 0) {
-    ElMessage.warning('今日喜欢次数已用完')
+const stopMatchingTipRotation = () => {
+  if (typeof window !== 'undefined' && matchingTipTimer !== null) {
+    window.clearInterval(matchingTipTimer)
+    matchingTipTimer = null
+  }
+  matchingTipIndex.value = 0
+  currentMatchingTip.value = matchingTips[0]
+}
+
+const startNoMatchHintTimer = () => {
+  clearNoMatchHintTimer()
+  if (typeof window === 'undefined') return
+  noMatchHintTimer = window.setTimeout(() => {
+    ElMessage.info('已为你持续匹配 10 分钟，稍后再来可能更容易遇到心动对象～')
+    noMatchHintTimer = null
+  }, NO_MATCH_HINT_DELAY)
+}
+
+const navigateToChat = (user: MatchUser) => {
+  const targetUser = { ...user }
+  const targetUserId = targetUser.id?.toString?.()
+  if (!targetUserId) {
+    ElMessage.error('匹配用户信息缺失，请重新进入匹配')
     return
   }
-  
-  remainingLikes.value--
-  totalLikes.value++
-  
-  // 模拟匹配成功
-  if (Math.random() > 0.7) {
-    showMatchSuccess.value = true
-    userAvatar.value = currentUser.value.avatar
-    userName.value = currentUser.value.name
-    todayMatches.value++
-  } else {
-    ElMessage.success('已喜欢')
-    loadNextUser()
+
+  const query: Record<string, string> = {
+    from: 'soul-match'
+  }
+  if (targetUser.chatRoomId) {
+    query.chatRoomId = targetUser.chatRoomId.toString()
+  }
+
+  void router.push({
+    path: `/chat/${targetUserId}`,
+    query
+  })
+}
+
+const handleMatchSuccess = (user: MatchUser) => {
+  const targetUser = { ...user }
+  matchStore.setLastMatchedUser(targetUser)
+
+  clearNoMatchHintTimer()
+  ElMessage.success('匹配成功，已为你们创建聊天通道')
+  isRealtimeQueued.value = false
+
+  void stopRealtimeFlow()
+  navigateToChat(targetUser)
+}
+
+const cancelMatching = async () => {
+  try {
+    await stopRealtimeFlow()
+    ElMessage.info('已取消匹配')
+    router.push('/app/planet')
+  } catch (error) {
+    console.error('取消匹配失败:', error)
+    ElMessage.error('取消匹配失败，请稍后重试')
   }
 }
 
-const superLike = () => {
-  if (remainingLikes.value <= 0) {
-    ElMessage.warning('今日喜欢次数已用完')
+const sendHeartbeat = async (offline = false) => {
+  try {
+    const response = await sendRealtimeHeartbeat({
+      deviceId,
+      platform: 'web',
+      offline
+    })
+    // 更新在线人数
+    if (response && typeof response.onlineCount === 'number' && response.onlineCount >= 0) {
+      onlineCount.value = Math.max(response.onlineCount, 1)
+    }
+  } catch (error) {
+    console.error('实时心跳失败:', error)
+  }
+}
+
+const handleRealtimeStatus = (status?: RealtimeMatchStatusResponse | null) => {
+  if (!status) return
+  realtimeStatus.value = status
+  // 每次收到状态更新时，都更新在线人数（确保实时性）
+  if (typeof status.onlineCount === 'number' && status.onlineCount >= 0) {
+    onlineCount.value = Math.max(status.onlineCount, 1)
+    console.log('[SoulMatch] 更新在线人数:', onlineCount.value)
+  }
+
+  if (status.matched && status.partner) {
+    const partnerUser = mapRealtimeUser(status.partner)
+    if (status.chatRoomId) {
+      partnerUser.chatRoomId = status.chatRoomId
+    }
+    handleMatchSuccess(partnerUser)
     return
   }
-  
-  remainingLikes.value--
-  totalLikes.value++
-  
-  // 超级喜欢匹配成功率更高
-  if (Math.random() > 0.5) {
-    showMatchSuccess.value = true
-    userAvatar.value = currentUser.value.avatar
-    userName.value = currentUser.value.name
-    todayMatches.value++
+
+  const wasQueued = isRealtimeQueued.value
+  isRealtimeQueued.value = status.queued
+  if (status.queued) {
+    if (!wasQueued) {
+      startNoMatchHintTimer()
+    }
   } else {
-    ElMessage.success('已超级喜欢')
-    loadNextUser()
+    clearNoMatchHintTimer()
+  }
+
+  if (!status.queued && realtimeFlowActive.value && typeof window !== 'undefined') {
+    window.setTimeout(() => {
+      if (realtimeFlowActive.value) {
+        void enqueueRealtimeMatchRequest()
+      }
+    }, 500)
   }
 }
 
-const closeMatchSuccess = () => {
-  showMatchSuccess.value = false
+const enqueueRealtimeMatchRequest = async () => {
+  if (!realtimeFlowActive.value) return
+  try {
+    const status = await enqueueRealtimeMatch()
+    handleRealtimeStatus(status)
+  } catch (error) {
+    console.error('实时匹配入队失败:', error)
+  }
 }
 
-const startChat = () => {
-  showMatchSuccess.value = false
-  ElMessage.success('开始聊天')
-  router.push('/chat/new')
+const connectMatchWebSocket = () => {
+  if (matchStompClient && matchStompClient.connected) {
+    return
+  }
+
+  if (matchStompClient && !matchStompClient.active) {
+    matchStompClient.activate()
+    return
+  }
+
+  const client = new Client({
+    reconnectDelay: 4000,
+    heartbeatIncoming: 20000,
+    heartbeatOutgoing: 20000,
+    webSocketFactory: () =>
+      new SockJS(`${API_BASE_URL}/ws/chat`, undefined, {
+        transports: ['websocket', 'xhr-streaming', 'xhr-polling'],
+        transportOptions: {
+          'xhr-streaming': { withCredentials: true },
+          'xhr-polling': { withCredentials: true }
+        }
+      }),
+    debug: import.meta.env.DEV ? (message) => console.log('[MatchWS]', message) : undefined
+  })
+
+  client.onConnect = () => {
+    console.log('[SoulMatch] WebSocket 已连接，订阅匹配消息')
+    // 订阅用户专属的匹配消息队列
+    if (matchSubscription) {
+      matchSubscription.unsubscribe()
+    }
+    matchSubscription = client.subscribe('/user/queue/realtime/match', (message: IMessage) => {
+      try {
+        const status = JSON.parse(message.body) as RealtimeMatchStatusResponse
+        console.log('[SoulMatch] 收到匹配状态更新:', status)
+        handleRealtimeStatus(status)
+      } catch (error) {
+        console.error('[SoulMatch] 解析匹配消息失败:', error, message.body)
+      }
+    })
+  }
+
+  client.onDisconnect = () => {
+    console.log('[SoulMatch] WebSocket 已断开')
+    matchSubscription = null
+  }
+
+  client.onStompError = (frame) => {
+    console.error('[SoulMatch] WebSocket STOMP 错误:', frame.headers['message'], frame.body)
+  }
+
+  client.onWebSocketError = (event) => {
+    console.error('[SoulMatch] WebSocket 连接错误:', event)
+  }
+
+  matchStompClient = client
+  client.activate()
 }
 
-const continueMatching = () => {
-  showMatchSuccess.value = false
-  loadNextUser()
+const disconnectMatchWebSocket = () => {
+  if (matchSubscription) {
+    matchSubscription.unsubscribe()
+    matchSubscription = null
+  }
+  if (matchStompClient) {
+    matchStompClient.deactivate()
+    matchStompClient = null
+  }
 }
 
-// 生命周期
-onMounted(() => {
-  loadNextUser()
+const startRealtimeFlow = async () => {
+  if (realtimeFlowActive.value) return
+  realtimeFlowActive.value = true
+  
+  // 连接 WebSocket 以接收匹配结果
+  connectMatchWebSocket()
+  
+  await sendHeartbeat()
+
+  if (typeof window !== 'undefined') {
+    heartbeatTimer = window.setInterval(() => {
+      void sendHeartbeat()
+    }, HEARTBEAT_INTERVAL)
+  }
+
+  await enqueueRealtimeMatchRequest()
+}
+
+const stopRealtimeFlow = async () => {
+  if (!realtimeFlowActive.value) return
+  realtimeFlowActive.value = false
+
+  clearNoMatchHintTimer()
+  if (heartbeatTimer !== null) {
+    window.clearInterval(heartbeatTimer)
+    heartbeatTimer = null
+  }
+
+  // 断开 WebSocket 连接
+  disconnectMatchWebSocket()
+
+  try {
+    await cancelRealtimeMatch()
+  } catch (error) {
+    console.warn('取消实时匹配失败', error)
+  }
+
+  await sendHeartbeat(true)
+}
+
+watch(
+  () => isRealtimeQueued.value,
+  (queued) => {
+    if (queued) {
+      startMatchingTipRotation()
+    } else {
+      stopMatchingTipRotation()
+    }
+  },
+  { immediate: true }
+)
+
+onMounted(async () => {
+  await startRealtimeFlow()
+})
+
+onBeforeUnmount(() => {
+  clearNoMatchHintTimer()
+  stopMatchingTipRotation()
+  disconnectMatchWebSocket()
+  void stopRealtimeFlow()
 })
 </script>
 
-<style lang="scss" scoped>
+<style scoped lang="scss">
 .soul-match-page {
-  background: linear-gradient(135deg, #faf7ff 0%, #f3f0ff 100%);
   min-height: 100vh;
-  padding: 20px;
+  padding: 24px 16px 120px;
+  background: radial-gradient(circle at 20% 20%, #f8f4ff, #ecebff 45%, #e8f4ff);
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.3) 2px, transparent 2px);
+    background-size: 120px 120px;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+}
+
+.soul-header {
+  text-align: center;
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
+
+  .title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e1b4b;
+
+    .badge {
+      font-size: 12px;
+      margin-left: 8px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(139, 92, 246, 0.15);
+      color: #8b5cf6;
+    }
+  }
+
+  .subtitle {
+    margin: 8px 0 16px;
+    color: #5b6178;
+    font-size: 14px;
+  }
+
+  .online-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 4px 18px rgba(79, 70, 229, 0.15);
+    font-size: 13px;
+    color: #4c1d95;
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 8px rgba(52, 211, 153, 0.8);
+    }
+  }
 }
 
 .match-container {
   flex: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 100%;
-  max-width: 400px;
-}
-
-.user-card {
+  max-width: 420px;
   position: relative;
+  z-index: 1;
+}
+
+.matching-state {
   width: 100%;
-  max-width: 350px;
-  height: 600px;
-  border-radius: 20px;
+  max-width: 360px;
+  padding: 36px 24px 40px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.95);
+  text-align: center;
+  box-shadow: 0 25px 50px rgba(79, 70, 229, 0.2);
+  position: relative;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2);
-  margin-bottom: 30px;
-  
-  .card-background {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(
-        to bottom,
-        transparent 0%,
-        transparent 60%,
-        rgba(0, 0, 0, 0.7) 100%
-      );
-    }
-  }
-  
-  .card-content {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 30px 20px 20px;
-    color: white;
-    z-index: 2;
-    
-    .user-info {
-      margin-bottom: 16px;
-      
-      .user-name {
-        font-size: 28px;
-        font-weight: 700;
-        margin-bottom: 4px;
-      }
-      
-      .user-age {
-        font-size: 18px;
-        opacity: 0.9;
-        margin-bottom: 8px;
-      }
-      
-      .user-location {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        font-size: 14px;
-        opacity: 0.8;
-      }
-    }
-    
-    .user-tags {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-      
-      .tag {
-        background: rgba(255, 255, 255, 0.2);
-        padding: 4px 12px;
-        border-radius: 16px;
-        font-size: 12px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-      }
-    }
-    
-    .user-description {
-      font-size: 14px;
-      line-height: 1.5;
-      opacity: 0.9;
-      margin-bottom: 20px;
-    }
-    
-    .match-score {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      
-      .score-circle {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        background: rgba(255, 255, 255, 0.2);
-        padding: 12px;
-        border-radius: 50%;
-        backdrop-filter: blur(10px);
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        
-        .score-text {
-          font-size: 18px;
-          font-weight: 700;
-        }
-        
-        .score-label {
-          font-size: 10px;
-          opacity: 0.8;
-        }
-      }
-      
-      .match-reasons {
-        flex: 1;
-        
-        .reason-item {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 12px;
-          margin-bottom: 4px;
-          opacity: 0.9;
-          
-          .el-icon {
-            color: #00ff88;
-          }
-        }
-      }
-    }
-  }
 }
 
-.action-buttons {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  
-  .action-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 16px;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: white;
-    font-size: 12px;
-    font-weight: 600;
-    
-    .el-icon {
-      font-size: 24px;
-    }
-    
-    &.pass-btn {
-      background: #6b7280;
-      box-shadow: 0 4px 16px rgba(107, 114, 128, 0.3);
-      
-      &:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 20px rgba(107, 114, 128, 0.4);
-      }
-    }
-    
-    &.super-like-btn {
-      background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
-      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
-      
-      &:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
-      }
-    }
-    
-    &.like-btn {
-      background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
-      box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
-      
-      &:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
-      }
-    }
-  }
-}
-
-.match-success-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1000;
+.matching-visual {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  margin: 0 auto 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  
-  .modal-background {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(10px);
-  }
-  
-  .modal-content {
-    position: relative;
-    background: white;
-    border-radius: 20px;
-    padding: 40px 30px;
-    text-align: center;
-    max-width: 350px;
-    width: 90%;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    
-    .success-animation {
-      margin-bottom: 30px;
-      
-      .heart-animation {
-        font-size: 60px;
-        animation: bounce 1s infinite;
-        margin-bottom: 16px;
-      }
-      
-      .success-text {
-        font-size: 24px;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 8px;
-      }
-      
-      .success-subtitle {
-        font-size: 14px;
-        color: #64748b;
-      }
-    }
-    
-    .matched-users {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      margin-bottom: 30px;
-      
-      .user-avatar {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        overflow: hidden;
-        border: 3px solid #8b5cf6;
-        
-        img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-      }
-      
-      .heart-icon {
-        font-size: 24px;
-        animation: pulse 2s infinite;
-      }
-    }
-    
-    .success-actions {
-      display: flex;
-      gap: 12px;
-      
-      .el-button {
-        flex: 1;
-        border-radius: 12px;
-        font-weight: 600;
-      }
-    }
-  }
 }
 
-.match-stats {
+.matching-visual .orbit {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px dashed rgba(139, 92, 246, 0.5);
+  animation: orbitPulse 4s linear infinite;
+}
+
+.orbit-large {
+  width: 100%;
+  height: 100%;
+}
+
+.orbit-medium {
+  width: 70%;
+  height: 70%;
+  animation-duration: 3.4s;
+}
+
+.orbit-small {
+  width: 45%;
+  height: 45%;
+  animation-duration: 2.8s;
+}
+
+.matching-avatar {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.25);
+  animation: floatAvatar 3s ease-in-out infinite;
+}
+
+.matching-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.matching-spark {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fcd34d, #f97316);
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.8);
+  animation: sparkMove 2.4s ease-in-out infinite;
+}
+
+.matching-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #4338ca;
+  margin-bottom: 8px;
+}
+
+.matching-tip {
+  margin: 0 auto 20px;
+  width: 90%;
+  color: #6b21a8;
+  line-height: 1.5;
+}
+
+.matching-progress {
   display: flex;
-  gap: 30px;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.progress-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #a78bfa;
+  opacity: 0.3;
+  animation: dotPulse 1.2s ease-in-out infinite;
+}
+
+.matching-cancel-btn {
+  display: flex;
+  justify-content: center;
   margin-top: 20px;
   
-  .stat-item {
-    text-align: center;
+  .el-button {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    color: #6b21a8;
+    font-weight: 500;
+    padding: 10px 24px;
     
-    .stat-number {
-      font-size: 20px;
-      font-weight: 700;
-      color: #1e293b;
-      margin-bottom: 4px;
-    }
-    
-    .stat-label {
-      font-size: 12px;
-      color: #64748b;
+    &:hover {
+      background: rgba(255, 255, 255, 1);
+      border-color: rgba(139, 92, 246, 0.5);
+      color: #4c1d95;
     }
   }
 }
 
-@keyframes bounce {
-  0%, 20%, 53%, 80%, 100% {
-    transform: translate3d(0, 0, 0);
-  }
-  40%, 43% {
-    transform: translate3d(0, -30px, 0);
-  }
-  70% {
-    transform: translate3d(0, -15px, 0);
-  }
-  90% {
-    transform: translate3d(0, -4px, 0);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
+@keyframes orbitPulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.5;
   }
   50% {
-    transform: scale(1.2);
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.5;
   }
 }
 
-// 响应式设计
-@media screen and (max-width: 768px) {
+@keyframes dotPulse {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+@keyframes floatAvatar {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes sparkMove {
+  0% {
+    transform: translate(-60px, -40px) scale(0.8);
+  }
+  50% {
+    transform: translate(50px, 30px) scale(1.2);
+  }
+  100% {
+    transform: translate(-60px, -40px) scale(0.8);
+  }
+}
+
+@media (max-width: 768px) {
   .soul-match-page {
-    padding: 16px;
+    padding: 16px 12px 32px;
   }
-  
-  .user-card {
-    height: 500px;
-    max-width: 300px;
-    
-    .card-content {
-      padding: 20px 16px 16px;
-      
-      .user-info {
-        .user-name {
-          font-size: 24px;
-        }
-        
-        .user-age {
-          font-size: 16px;
-        }
-      }
-    }
-  }
-  
-  .action-buttons {
-    gap: 16px;
-    
-    .action-btn {
-      padding: 12px;
-      
-      .el-icon {
-        font-size: 20px;
-      }
-    }
-  }
-  
-  .match-stats {
-    gap: 20px;
-    
-    .stat-item {
-      .stat-number {
-        font-size: 18px;
-      }
-    }
+
+  .matching-state {
+    max-width: 320px;
   }
 }
 </style>

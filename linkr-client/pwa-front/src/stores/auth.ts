@@ -56,11 +56,17 @@ export const useAuthStore = defineStore('auth', () => {
   const isVerified = computed(() => user.value?.isVerified || false)
 
   // 方法
-  const initUser = async () => {
-    if (isInitialized.value) return
+  const initUser = async (force = false) => {
+    // 如果已经初始化且不是强制刷新，则跳过
+    if (isInitialized.value && !force) return
 
     try {
       isLoading.value = true
+      
+      // 清除旧的用户信息，确保从后端获取最新信息
+      if (force) {
+        user.value = null
+      }
       
       // 尝试从Session获取用户信息（通过API调用）
       await fetchUserInfo()
@@ -80,7 +86,7 @@ export const useAuthStore = defineStore('auth', () => {
       const userData = await get<User>('/api/user/current')
       
       if (userData) {
-        user.value = {
+        const newUser = {
           id: userData.id?.toString() || '',
           phone: userData.phone || '',
           nickname: userData.nickname || '',
@@ -96,6 +102,16 @@ export const useAuthStore = defineStore('auth', () => {
           createdAt: userData.createdAt || new Date().toISOString(),
           lastLoginAt: userData.lastLoginAt || new Date().toISOString()
         }
+        
+        console.log('获取用户信息成功:', {
+          id: newUser.id,
+          nickname: newUser.nickname,
+          avatar: newUser.avatar,
+          gender: newUser.gender,
+          oldAvatar: user.value?.avatar
+        })
+        
+        user.value = newUser
       }
     } catch (error) {
       console.error('获取用户信息失败:', error)

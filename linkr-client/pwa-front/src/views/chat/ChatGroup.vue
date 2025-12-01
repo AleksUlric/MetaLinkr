@@ -223,6 +223,34 @@ onMounted(() => {
   padding: 16px;
   background: white;
   border-top: 1px solid #e5e5e5;
+  
+  :deep(.el-input__wrapper) {
+    background-color: #f5f5f5;
+    box-shadow: 0 0 0 1px #e0e0e0 inset;
+    
+    .el-input__inner {
+      color: #333;
+      
+      &::placeholder {
+        color: #999;
+      }
+    }
+  }
+  
+  :deep(.el-input-group__append) {
+    background-color: #007bff;
+    border-color: #007bff;
+    
+    .el-button {
+      color: white;
+      border-color: #007bff;
+      
+      &:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+      }
+    }
+  }
 }
 
 // 深色模式适配
@@ -258,6 +286,34 @@ onMounted(() => {
   .chat-input {
     background: #2a2a2a;
     border-top-color: #333;
+    
+    :deep(.el-input__wrapper) {
+      background-color: #1a1a1a;
+      box-shadow: 0 0 0 1px #444 inset;
+      
+      .el-input__inner {
+        color: #fff;
+        
+        &::placeholder {
+          color: #888;
+        }
+      }
+    }
+    
+    :deep(.el-input-group__append) {
+      background-color: #007bff;
+      border-color: #007bff;
+      
+      .el-button {
+        color: white;
+        border-color: #007bff;
+        
+        &:hover {
+          background-color: #0056b3;
+          border-color: #0056b3;
+        }
+      }
+    }
   }
 }
 </style>

@@ -59,9 +59,16 @@
           </div>
           <div class="user-info">
             <h2 class="username">
-              {{ userStore.profile?.nickname || '无可奈何花落去' }}
+              {{ getUserData.nickname || '无可奈何花落去' }}
               <el-icon class="edit-name"><Edit /></el-icon>
             </h2>
+            <div class="user-meta" v-if="userAge || userLocation">
+              <span v-if="userAge">{{ userAge }}岁</span>
+              <span v-if="userLocation" class="location-info">
+                <el-icon><Location /></el-icon>
+                {{ userLocation }}
+              </span>
+            </div>
             <div class="user-stats">
               <div class="stat-item">
                 <span class="stat-value">47</span>
@@ -91,14 +98,26 @@
                 <span>2599天</span>
           </div>
             </div>
-            <div class="user-interests">
-              <span class="interest-tag">电音</span>
-              <span class="interest-tag">项目经理</span>
-              <span class="interest-tag">工程师</span>
-              <span class="interest-tag">每年至少一次旅行</span>
-              <div class="add-interest-btn">
+            <div class="user-interests" v-if="userInterests.length > 0">
+              <span 
+                v-for="interest in userInterests" 
+                :key="interest" 
+                class="interest-tag"
+              >
+                {{ interest }}
+              </span>
+              <div class="add-interest-btn" @click="editProfile">
                 <el-icon><Plus /></el-icon>
-          </div>
+              </div>
+            </div>
+            <div class="user-interests" v-else>
+              <div class="add-interest-btn" @click="editProfile">
+                <el-icon><Plus /></el-icon>
+                <span>添加兴趣爱好</span>
+              </div>
+            </div>
+            <div class="user-bio" v-if="userBio">
+              <p>{{ userBio }}</p>
             </div>
           </div>
         </div>
@@ -186,9 +205,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
+import { useAuthStore } from '../stores/auth'
 import { ElMessage } from 'element-plus'
 import { getUserAvatarUrl } from '@/utils/avatar'
+import { get } from '@/utils/request'
 import { 
   Setting,
   MoreFilled,
@@ -197,15 +219,79 @@ import {
   Camera,
   Edit,
   Plus,
-  Lock
+  Lock,
+  Location
 } from '@element-plus/icons-vue'
 
+const router = useRouter()
 const userStore = useUserStore()
+const authStore = useAuthStore()
+
+// 获取用户信息（优先从authStore.user，因为它是从后端获取的最新信息）
+const getUserData = computed(() => {
+  const profile = userStore.profile as any
+  const authUser = authStore.user as any
+  
+  // 优先使用authStore中的user数据（从后端获取的最新信息）
+  if (authUser) {
+    return {
+      ...authUser,
+      interests: authUser.interests || (authUser.interests ? authUser.interests.split(',') : [])
+    }
+  }
+  
+  // 如果authStore.user不存在，再使用userStore.profile（但需要确保不是mock数据）
+  if (profile && profile.nickname && profile.nickname !== '灵魂旅人') {
+    return profile
+  }
+  
+  return profile || {}
+})
 
 // 计算用户头像URL（自动处理 OSS 默认头像转换）
 const userAvatarUrl = computed(() => {
-  const profile = userStore.profile as any
-  return getUserAvatarUrl(profile?.avatar, profile?.gender || 'male')
+  const userData = getUserData.value
+  return getUserAvatarUrl(userData?.avatar, userData?.gender || 'male')
+})
+
+// 计算用户年龄（从生日计算）
+const userAge = computed(() => {
+  const userData = getUserData.value
+  if (userData?.birthday) {
+    const birthDate = new Date(userData.birthday)
+    const today = new Date()
+    let age = today.getFullYear() - birthDate.getFullYear()
+    const monthDiff = today.getMonth() - birthDate.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--
+    }
+    return age
+  }
+  return null
+})
+
+// 用户兴趣爱好
+const userInterests = computed(() => {
+  const userData = getUserData.value
+  if (Array.isArray(userData?.interests)) {
+    return userData.interests
+  }
+  if (typeof userData?.interests === 'string' && userData.interests) {
+    return userData.interests.split(',').filter(Boolean)
+  }
+  return []
+})
+
+// 用户个人简介
+const userBio = computed(() => {
+  const userData = getUserData.value
+  return userData?.bio || ''
+})
+
+// 用户位置
+const userLocation = computed(() => {
+  const userData = getUserData.value
+  return userData?.location || ''
 })
 
 // 响应式数据
@@ -215,15 +301,7 @@ const showEditDialog = ref(false)
 const isVip = ref(true)
 const showBanner = ref(true)
 
-// 编辑表单
-const editForm = ref({
-  avatar: getUserAvatarUrl((userStore.profile as any)?.avatar, (userStore.profile as any)?.gender || 'male'),
-  nickname: (userStore.profile as any)?.nickname || '',
-  gender: ((userStore.profile as any)?.gender || 'male') as 'male' | 'female' | 'other',
-  age: 25,
-  bio: '这个人很懒，什么都没有留下~',
-  interests: ['音乐', '电影', '旅行']
-})
+// 编辑表单（已废弃，现在直接跳转到编辑页面）
 
 
 // 更新时间
@@ -254,7 +332,7 @@ const closeBanner = () => {
 }
 
 const editProfile = () => {
-  showEditDialog.value = true
+  router.push('/app/profile/edit')
 }
 
 // const saveProfile = () => {
@@ -264,21 +342,48 @@ const editProfile = () => {
 //   ElMessage.success('资料保存成功')
 // }
 
-onMounted(() => {
+// 加载用户信息
+const loadUserProfile = async () => {
+  try {
+    // 从API获取用户详细信息
+    const profileData = await get<any>('/api/user/profile')
+    if (profileData) {
+      // 更新userStore的profile
+      if (userStore.profile) {
+        Object.assign(userStore.profile, {
+          nickname: profileData.nickname,
+          avatar: profileData.avatar,
+          gender: profileData.gender,
+          birthday: profileData.birthday,
+          location: profileData.location,
+          bio: profileData.bio,
+          interests: Array.isArray(profileData.interests) 
+            ? profileData.interests 
+            : (profileData.interests ? profileData.interests.split(',') : [])
+        })
+      } else {
+        // 如果profile不存在，创建一个
+        userStore.profile = {
+          ...profileData,
+          interests: Array.isArray(profileData.interests) 
+            ? profileData.interests 
+            : (profileData.interests ? profileData.interests.split(',') : [])
+        } as any
+      }
+    }
+  } catch (error) {
+    console.error('加载用户信息失败:', error)
+  }
+}
+
+onMounted(async () => {
   updateTime()
+  
+  // 加载用户信息
+  await loadUserProfile()
   
   // 每秒更新时间
   const timeInterval = setInterval(updateTime, 1000)
-  
-  // 初始化数据
-  editForm.value = {
-    avatar: getUserAvatarUrl((userStore.profile as any)?.avatar, (userStore.profile as any)?.gender || 'male'),
-    nickname: (userStore.profile as any)?.nickname || '',
-    gender: ((userStore.profile as any)?.gender || 'male') as 'male' | 'female' | 'other',
-    age: 25,
-    bio: '这个人很懒，什么都没有留下~',
-    interests: ['音乐', '电影', '旅行']
-  }
   
   onUnmounted(() => {
     clearInterval(timeInterval)
@@ -529,7 +634,7 @@ onMounted(() => {
         .username {
           font-size: 24px;
           font-weight: 700;
-          margin: 0 0 16px 0;
+          margin: 0 0 8px 0;
           color: #333333;
           display: flex;
           align-items: center;
@@ -544,6 +649,21 @@ onMounted(() => {
             &:hover {
               color: #4facfe;
             }
+          }
+        }
+
+        .user-meta {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 16px;
+          font-size: 14px;
+          color: #666666;
+
+          .location-info {
+            display: flex;
+            align-items: center;
+            gap: 4px;
           }
         }
 
@@ -626,23 +746,41 @@ onMounted(() => {
           }
 
           .add-interest-btn {
-            width: 32px;
+            min-width: 32px;
             height: 32px;
-            border-radius: 50%;
+            padding: 0 12px;
+            border-radius: 16px;
             background: #f8f9fa;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
             cursor: pointer;
             transition: all 0.3s ease;
             color: #666666;
             border: 1px solid #e9ecef;
+            font-size: 12px;
 
             &:hover {
               background: #4facfe;
               color: white;
               border-color: #4facfe;
             }
+          }
+        }
+
+        .user-bio {
+          margin-top: 16px;
+          padding: 12px;
+          background: rgba(79, 172, 254, 0.05);
+          border-radius: 12px;
+          border: 1px solid rgba(79, 172, 254, 0.1);
+
+          p {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #475569;
           }
         }
 

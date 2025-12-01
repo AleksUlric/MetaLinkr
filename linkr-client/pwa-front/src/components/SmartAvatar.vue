@@ -42,8 +42,35 @@ const computedAvatarUrl = computed(() => {
 })
 
 // 监听计算属性变化
-watch(computedAvatarUrl, (newUrl) => {
-  avatarUrl.value = newUrl
+watch(computedAvatarUrl, (newUrl, oldUrl) => {
+  console.log('SmartAvatar URL变化:', { oldUrl, newUrl, src: props.src, gender: props.gender })
+  // 如果URL相同，添加时间戳参数强制刷新（避免浏览器缓存）
+  let finalUrl = newUrl
+  if (newUrl === oldUrl && newUrl && newUrl.includes('/api/')) {
+    const separator = newUrl.includes('?') ? '&' : '?'
+    finalUrl = `${newUrl}${separator}_t=${Date.now()}`
+  }
+  avatarUrl.value = finalUrl
+}, { immediate: true })
+
+// 同时监听 props.src 的变化，确保及时更新
+watch(() => props.src, (newSrc, oldSrc) => {
+  console.log('SmartAvatar src prop变化:', { oldSrc, newSrc })
+  if (newSrc && newSrc.trim()) {
+    // 如果URL相同，添加时间戳参数强制刷新（避免浏览器缓存）
+    let finalUrl = newSrc
+    if (newSrc === oldSrc && newSrc.includes('/api/')) {
+      const separator = newSrc.includes('?') ? '&' : '?'
+      finalUrl = `${newSrc}${separator}_t=${Date.now()}`
+    }
+    avatarUrl.value = finalUrl
+    useLocalFallback.value = false
+  } else {
+    // 如果src为空，使用默认头像
+    avatarUrl.value = useLocalFallback.value 
+      ? getLocalDefaultAvatarUrl(props.gender)
+      : getDefaultAvatarUrl(props.gender)
+  }
 }, { immediate: true })
 
 // 组件挂载时，如果没有src，尝试从后端获取默认头像

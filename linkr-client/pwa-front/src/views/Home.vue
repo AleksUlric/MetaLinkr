@@ -315,8 +315,8 @@ const createMoment = () => {
 }
 
 const startSoulMatch = () => {
-  router.push('/match')
-  ElMessage.success('开始灵犀链接')
+  router.push('/match/soul')
+  ElMessage.success('灵犀匹配正在为你排队')
 }
 
 const joinVoiceRoom = () => {

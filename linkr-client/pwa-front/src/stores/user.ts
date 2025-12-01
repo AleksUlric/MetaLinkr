@@ -18,8 +18,31 @@ export const useUserStore = defineStore('user', () => {
       const userData = await get<User>('/api/user/current')
       if (userData) {
         user.value = userData
-        // profile可以从user数据中提取或单独获取
-        profile.value = mockUserProfile // 临时使用mock，后续可以改为从API获取
+        
+        // 尝试获取详细的profile信息
+        try {
+          const profileData = await get<UserProfile>('/api/user/profile')
+          if (profileData) {
+            // 处理interests字段（可能是字符串或数组）
+            if (profileData.interests && typeof profileData.interests === 'string') {
+              profileData.interests = profileData.interests.split(',').filter(Boolean) as any
+            }
+            profile.value = profileData
+          } else {
+            // 如果获取profile失败，使用user数据构建profile
+            profile.value = {
+              ...userData,
+              interests: userData.interests ? (typeof userData.interests === 'string' ? userData.interests.split(',') : userData.interests) : []
+            } as UserProfile
+          }
+        } catch (profileError) {
+          // 如果获取profile失败，使用user数据构建profile
+          console.warn('获取profile信息失败，使用基础用户信息:', profileError)
+          profile.value = {
+            ...userData,
+            interests: userData.interests ? (typeof userData.interests === 'string' ? userData.interests.split(',') : userData.interests) : []
+          } as UserProfile
+        }
       }
     } catch (error) {
       console.error('获取用户信息失败:', error)
@@ -120,13 +143,8 @@ export const useUserStore = defineStore('user', () => {
       // 调用后端API更新用户信息（使用Session认证）
       await post('/api/user/complete-profile', profileData)
       
-      // 更新本地用户信息
-      if (profile.value) {
-        Object.assign(profile.value, profileData)
-      }
-      if (user.value) {
-        Object.assign(user.value, profileData)
-      }
+      // 重新获取用户信息以确保数据同步
+      await initUser()
       
       return { success: true }
     } catch (error: any) {
